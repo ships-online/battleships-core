@@ -2,13 +2,14 @@
   "name": "battle-ships-core",
   "version": "0.0.1",
   "description": "Battle ships core",
-  "scripts": {
-    "test": "node_modules/.bin/gulp test"
-  },
   "author": "Oskar Wróbel <kontakt@oskarwrobel.pl>",
   "license": "ISC",
   "devDependencies": {
+    "del": "^2.2.2",
     "gulp": "^3.9.1",
     "guppy-pre-commit": "^0.4.0"
+  },
+  "dependencies": {
+    "battle-ships-engine": "file:///Users/wrb/Sites/games/battle-ships/battle-ships-engine"
   }
 }
