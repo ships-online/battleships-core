@@ -7,10 +7,10 @@ const config = {
 const path = require( 'path' );
 const gulp = require( 'gulp' );
 const del = require( 'del' );
-const utils = require( 'battle-ships-engine/dev/utils.js' )( config );
-const lintTasks = require( 'battle-ships-engine/dev/tasks/lint.js' )( config );
-const testTasks = require( 'battle-ships-engine/dev/tasks/test.js' )( config );
-const engineCompileTasks = require( 'battle-ships-engine/dev/tasks/compile.js' )( config );
+const utils = require( 'battleships-engine/dev/utils.js' )( config );
+const lintTasks = require( 'battleships-engine/dev/tasks/lint.js' )( config );
+const testTasks = require( 'battleships-engine/dev/tasks/test.js' )( config );
+const engineCompileTasks = require( 'battleships-engine/dev/tasks/compile.js' )( config );
 
 const options = utils.parseArgs( process.argv.slice( 3 ) );
 
