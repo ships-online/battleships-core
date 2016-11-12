@@ -1,6 +1,6 @@
-import EmitterMixin from 'utils/emittermixin.js';
-import Server from '../engine/server.js';
-import Battlefield from '../engine/battlefield.js';
+import EmitterMixin from 'lib/utils/emittermixin.js';
+import Server from 'lib/engine/server.js';
+import Battlefield from 'lib/engine/battlefield.js';
 
 /**
  * Game interface.
