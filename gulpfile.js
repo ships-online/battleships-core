@@ -15,8 +15,11 @@ const compileTasks = require( 'battleships-dev-tools/lib/tasks/compile.js' )( co
 const options = utils.parseArgs( process.argv.slice( 3 ) );
 
 // Compile engine to esnext format.
-gulp.task( 'clean:compile:engine', () => del( './engine' ) );
-gulp.task( 'compile:engine', [ 'clean:compile:engine' ], () => compileTasks.compile( '../battleships-engine/src', './engine' ) );
+gulp.task( 'clean:engine', () => del( './engine' ) );
+gulp.task( 'clean:utils', () => del( './utils' ) );
+gulp.task( 'compile:engine', [ 'clean:engine' ], () => compileTasks.compile( '../battleships-engine/src', './engine' ) );
+gulp.task( 'compile:utils', [ 'clean:utils' ], () => compileTasks.compile( '../battleships-utils/src', './utils' ) );
+gulp.task( 'compile', [ 'compile:engine', 'compile:utils' ], ( done ) => done() );
 
 // JS code sniffer.
 const jsFiles = [ path.join( config.ROOT_PATH, '**', '*.js' ) ];

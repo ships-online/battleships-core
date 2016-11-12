@@ -1,4 +1,4 @@
-import EmitterMixin from '../engine/utils/emittermixin.js';
+import EmitterMixin from 'utils/emittermixin.js';
 import Server from '../engine/server.js';
 import Battlefield from '../engine/battlefield.js';
 
