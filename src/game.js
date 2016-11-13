@@ -10,9 +10,9 @@ import Battlefield from 'lib/engine/battlefield.js';
 export default class Game {
 	/**
 	 * @param {Number} [size=10] Size of the battlefield.
-	 * @param {Object} [ships={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
+	 * @param {Object} [shipsConfig={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
 	 */
-	constructor( size = 10, ships = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
+	constructor( size = 10, shipsConfig = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
 		/**
 		 * Size of the battlefield.
 		 *
@@ -24,13 +24,13 @@ export default class Game {
 		 * @private
 		 * @type {game.Battlefield}
 		 */
-		this._playerBattlefield = new Battlefield( size, ships );
+		this._playerBattlefield = new Battlefield( size, shipsConfig );
 
 		/**
 		 * @private
 		 * @type {game.Battlefield}
 		 */
-		this._opponentBattlefield = new Battlefield( size, ships );
+		this._opponentBattlefield = new Battlefield( size, shipsConfig );
 
 		/**
 		 * Events emitter instance.
