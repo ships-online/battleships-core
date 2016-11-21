@@ -8,14 +8,14 @@ const path = require( 'path' );
 const gulp = require( 'gulp' );
 
 const utils = require( 'battleships-dev-tools/lib/utils.js' );
-const linkTask = require( 'battleships-dev-tools/lib/tasks/relink.js' )( config );
+const linkTasks = require( 'battleships-dev-tools/lib/tasks/relink.js' )( config );
 const lintTasks = require( 'battleships-dev-tools/lib/tasks/lint.js' )( config );
 const testTasks = require( 'battleships-dev-tools/lib/tasks/test.js' )( config );
 const compileTasks = require( 'battleships-dev-tools/lib/tasks/compile.js' )( config );
 
 const options = utils.parseArgs( process.argv.slice( 3 ) );
 
-gulp.task( 'relink', linkTask.relink );
+gulp.task( 'relink', linkTasks.relink );
 
 // Compile engine and utils to esnext format.
 gulp.task( 'clean:compile:engine', () => utils.del( './lib/engine' ) );
