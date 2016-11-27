@@ -18,16 +18,16 @@ const options = utils.parseArgs( process.argv.slice( 3 ) );
 gulp.task( 'relink', linkTasks.relink );
 
 // Compile engine and utils to esnext format.
-gulp.task( 'clean:compile:engine', () => utils.del( './lib/engine' ) );
-gulp.task( 'clean:compile:utils', () => utils.del( './lib/utils' ) );
+gulp.task( 'clean:build:engine', () => utils.del( './lib/engine' ) );
+gulp.task( 'clean:build:utils', () => utils.del( './lib/utils' ) );
 
-gulp.task( 'compile:engine', [ 'clean:compile:engine' ], () => {
-	compileTasks.compile( 'node_modules/battleships-engine/src', './lib/engine' )
+gulp.task( 'build:engine', [ 'clean:build:engine' ], () => {
+	compileTasks.build( 'node_modules/battleships-engine/src', './lib/engine' )
 } );
-gulp.task( 'compile:utils', [ 'clean:compile:utils' ], () => {
-	compileTasks.compile( 'node_modules/battleships-utils/src', './lib/utils' )
+gulp.task( 'build:utils', [ 'clean:build:utils' ], () => {
+	compileTasks.build( 'node_modules/battleships-utils/src', './lib/utils' )
 } );
-gulp.task( 'compile', [ 'compile:engine', 'compile:utils' ], ( done ) => done() );
+gulp.task( 'build', [ 'build:engine', 'build:utils' ], ( done ) => done() );
 
 // JS code sniffer.
 const jsFiles = [ path.join( config.ROOT_PATH, '**', '*.js' ) ];
