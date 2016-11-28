@@ -63,19 +63,6 @@ export default class Game {
 		return this.server.create().then( ( roomId ) => roomId );
 	}
 
-	moveShip( ship, position ) {
-		// Update position of moved ship on the battlefield.
-		this._playerBattlefield.move( ship, position );
-
-		// Check if ships with collision still have a collision after one ship was moved.
-		for ( let collisionShip of this._playerBattlefield.shipsCollection.getWithCollision() ) {
-			this._playerBattlefield.checkShipCollision( collisionShip );
-		}
-
-		// Check if moved ship has a collision.
-		this._playerBattlefield.checkShipCollision( ship );
-	}
-
 	/**
 	 * Send to the server configuration of player ships placement and inform opponent that player is ready for the battle.
 	 */
