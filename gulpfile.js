@@ -20,7 +20,8 @@ gulp.task( 'relink', linkTasks.relink );
 // Build game dependency.
 gulp.task( 'build:engine', () => compileTasks.buildDependency( 'engine' ) );
 gulp.task( 'build:utils', () => compileTasks.buildDependency( 'utils' ) );
-gulp.task( 'build', [ 'build:engine', 'build:utils' ] );
+gulp.task( 'build:ui', () => compileTasks.buildDependency( 'ui-vanilla' ) );
+gulp.task( 'build', [ 'build:engine', 'build:utils', 'build:ui' ] );
 
 // JS code sniffer.
 const jsFiles = [ path.join( config.ROOT_PATH, '**', '*.js' ) ];

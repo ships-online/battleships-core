@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "battleships-engine": "../battleships-engine",
-    "battleships-utils": "../battleships-utils"
+    "battleships-utils": "../battleships-utils",
+    "battleships-ui-vanilla": "../battleships-ui-vanilla"
   }
 }
