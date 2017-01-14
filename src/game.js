@@ -1,6 +1,8 @@
 import EmitterMixin from 'lib/utils/emittermixin.js';
 import Server from 'lib/engine/server.js';
-import Battlefield from 'lib/engine/battlefield.js';
+import PlayerBattlefield from 'lib/engine/playerbattlefield.js';
+import AiBattlefield from 'lib/engine/aibattlefield.js';
+import GameView from 'lib/ui-vanilla/gameview.js';
 
 /**
  * Game interface.
@@ -21,16 +23,16 @@ export default class Game {
 		this.size = size;
 
 		/**
-		 * @private
 		 * @type {game.Battlefield}
 		 */
-		this._playerBattlefield = new Battlefield( size, shipsConfig );
+		this.playerBattlefield = new PlayerBattlefield( size, shipsConfig );
 
 		/**
-		 * @private
 		 * @type {game.Battlefield}
 		 */
-		this._opponentBattlefield = new Battlefield( size, shipsConfig );
+		this.opponentBattlefield = new AiBattlefield( size, shipsConfig );
+
+		this.view = new GameView( this );
 
 		/**
 		 * Events emitter instance.
@@ -59,29 +61,24 @@ export default class Game {
 		this._emitter.on( event, callback );
 	}
 
-	create() {
-		return this.server.create().then( ( roomId ) => roomId );
+	create( element ) {
+		this.playerBattlefield.random();
+		element.appendChild( this.view.render() );
+
+		return this._server.create().then( ( roomId ) => {
+			console.log( roomId );
+		} );
 	}
 
 	/**
 	 * Send to the server configuration of player ships placement and inform opponent that player is ready for the battle.
 	 */
 	ready() {
-		if ( this._playerBattlefield.getWithCollision().length ) {
+		if ( this.playerBattlefield.getWithCollision().length ) {
 			throw new Error( 'Invalid ships configuration.' );
 		}
 
-		this._server.emit( 'playerReady', { shipsDada: this._playerBattlefield.toJSON() } );
-	}
-
-	/**
-	 * Take a shot.
-	 *
-	 * @param {Number} x Position of the field in horizontal axis.
-	 * @param {Number} y Position of the field in vertical axis.
-	 */
-	shoot( x, y ) {
-		this._server.emit( 'shoot', { x, y } );
+		this._server.emit( 'playerReady', { shipsDada: this.playerBattlefield.toJSON() } );
 	}
 
 	/**
