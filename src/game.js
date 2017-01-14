@@ -1,8 +1,8 @@
-import EmitterMixin from 'lib/utils/emittermixin.js';
-import Server from 'lib/engine/server.js';
-import PlayerBattlefield from 'lib/engine/playerbattlefield.js';
-import AiBattlefield from 'lib/engine/aibattlefield.js';
-import GameView from 'lib/ui-vanilla/gameview.js';
+import EmitterMixin from 'battleships-utils/src/emittermixin.js';
+import Server from 'battleships-engine/src/server.js';
+import PlayerBattlefield from 'battleships-engine/src/playerbattlefield.js';
+import AiBattlefield from 'battleships-engine/src/aibattlefield.js';
+import GameView from 'battleships-ui-vanilla/src/gameview.js';
 
 /**
  * Game interface.
