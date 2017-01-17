@@ -1,8 +1,9 @@
-import EmitterMixin from 'battleships-utils/src/emittermixin.js';
-import Server from 'battleships-engine/src/server.js';
+import Server from './server.js';
 import PlayerBattlefield from 'battleships-engine/src/playerbattlefield.js';
 import AiBattlefield from 'battleships-engine/src/aibattlefield.js';
 import GameView from 'battleships-ui-vanilla/src/gameview.js';
+import ObservableMixin from 'battleships-utils/src/observablemixin.js';
+import mix from 'battleships-utils/src/mix.js';
 
 /**
  * Game interface.
@@ -14,13 +15,15 @@ export default class Game {
 	 * @param {Number} [size=10] Size of the battlefield.
 	 * @param {Object} [shipsConfig={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
 	 */
-	constructor( size = 10, shipsConfig = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
+	constructor( server, size = 10, shipsConfig = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
 		/**
 		 * Size of the battlefield.
 		 *
 		 * @member {Number} game.Game#size
 		 */
 		this.size = size;
+
+		this.set( 'gameId' );
 
 		/**
 		 * @type {game.Battlefield}
@@ -35,39 +38,12 @@ export default class Game {
 		this.view = new GameView( this );
 
 		/**
-		 * Events emitter instance.
-		 *
-		 * @protected
-		 * @member {utils.EmitterMixin} game.Game#_emitter
-		 */
-		this._emitter = Object.create( EmitterMixin );
-
-		/**
 		 * Instance of a class for web sockets communication.
 		 *
 		 * @private
 		 * @type {game.Server}
 		 */
-		this._server = new Server( this._emitter );
-	}
-
-	/**
-	 * Attach callbacks to the game life cycle events.
-	 *
-	 * @param {String} event The name of the event.
-	 * @param {Function} callback The function to be called on event.
-	 */
-	on( event, callback ) {
-		this._emitter.on( event, callback );
-	}
-
-	create( element ) {
-		this.playerBattlefield.random();
-		element.appendChild( this.view.render() );
-
-		return this._server.create().then( ( roomId ) => {
-			console.log( roomId );
-		} );
+		this._server = server;
 	}
 
 	/**
@@ -93,7 +69,42 @@ export default class Game {
 	 * Close connection with the server and release memory assets.
 	 */
 	destroy() {}
+
+	static create( element, size, shipsConfig ) {
+		return new Promise( ( resolve ) => {
+			const server = new Server();
+			const game = new Game( server, size, shipsConfig );
+
+			game.playerBattlefield.random();
+			element.appendChild( game.view.render() );
+			server.create( game.size, game.playerBattlefield.shipsCollection.shipsConfig )
+				.then( ( gameId ) => game.gameId = gameId );
+
+			resolve( game );
+		} );
+	}
+
+	static join( element, gameId ) {
+		const server = new Server();
+		let game;
+
+		return server.join( gameId ).then( ( response ) => {
+			if ( response.status == 'available' ) {
+				game = new Game( server, response.gameData.size, response.gameData.shipsConfig );
+				game.playerBattlefield.random();
+				element.appendChild( game.view.render() );
+			} else if ( response.status == 'started' ) {
+				alert( 'Sorry this game has already started.' );
+			} else {
+				alert( 'Sorry this game not exist.' );
+			}
+
+			return game;
+		} );
+	}
 }
+
+mix( Game, ObservableMixin );
 
 /**
  * Fired when the opponent leave the game or lost connection with the server.
