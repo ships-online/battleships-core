@@ -2,6 +2,7 @@ import Server from './server.js';
 import Player from './player.js';
 import PlayerBattlefield from 'battleships-engine/src/playerbattlefield.js';
 import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield.js';
+import Ship from 'battleships-engine/src/ship.js';
 import GameView from 'battleships-ui-vanilla/src/gameview.js';
 import ObservableMixin from 'battleships-utils/src/observablemixin.js';
 import mix from 'battleships-utils/src/mix.js';
@@ -14,10 +15,10 @@ import mix from 'battleships-utils/src/mix.js';
 export default class Game {
 	/**
 	 * @param {Number} [size=10] Size of the battlefield.
-	 * @param {Object} [shipsConfig={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
+	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
 	 */
-	constructor( server, size = 10, shipsConfig = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
-		this.gameData = { size, shipsConfig };
+	constructor( server, size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
+		this.gameData = { size, shipsSchema };
 
 		this.set( 'gameId' );
 
@@ -28,11 +29,11 @@ export default class Game {
 		this.size = size;
 
 		this.player = new Player( {
-			battlefield: new PlayerBattlefield( size, shipsConfig )
+			battlefield: PlayerBattlefield.createWithShips( size, shipsSchema )
 		} );
 
 		this.opponent = new Player( {
-			battlefield: new OpponentBattlefield( size, shipsConfig )
+			battlefield: new OpponentBattlefield( size, shipsSchema )
 		} );
 
 		this.view = new GameView( this );
@@ -82,10 +83,20 @@ export default class Game {
 			} );
 	}
 
-	static create( element, size, shipsConfig ) {
+	shoot( [ x, y ] ) {
+		this._server.request( 'shoot', [ x, y ] ).then( ( data ) => {
+			this.opponent.battlefield.setField( data.position, data.type );
+
+			if ( data.sunk ) {
+				this.opponent.battlefield.shipsCollection.add( new Ship( data.sunk ) );
+			}
+		} );
+	}
+
+	static create( element, size, shipsSchema ) {
 		return new Promise( ( resolve ) => {
 			const server = new Server();
-			const game = new Game( server, size, shipsConfig );
+			const game = new Game( server, size, shipsSchema );
 
 			game.player.battlefield.random();
 			game.player.isPresent = true;
@@ -118,7 +129,7 @@ export default class Game {
 			} else if ( data.status != 'available' ) {
 				alert( 'Sorry this game not exist.' );
 			} else {
-				game = new Game( server, data.gameData.size, data.gameData.shipsConfig );
+				game = new Game( server, data.gameData.size, data.gameData.shipsSchema );
 
 				game.player.battlefield.random();
 				game.player.isPresent = false;
@@ -141,6 +152,7 @@ export default class Game {
 		this._server.on( 'ready', () => this.opponent.isReady = true );
 		this._server.on( 'started', () => this.isStarted = true );
 		this._server.on( 'gameOver', () => alert( 'Game is over.' ) );
+		this._server.on( 'shoot', ( evt, data ) => this.player.battlefield.setField( data.position, data.type ) );
 	}
 
 	destroy() {
