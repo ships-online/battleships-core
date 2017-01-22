@@ -4,8 +4,8 @@ import PlayerBattlefield from 'battleships-engine/src/playerbattlefield.js';
 import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield.js';
 import Ship from 'battleships-engine/src/ship.js';
 import GameView from 'battleships-ui-vanilla/src/gameview.js';
-import ObservableMixin from 'battleships-utils/src/observablemixin.js';
-import mix from 'battleships-utils/src/mix.js';
+import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
+import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 /**
  * Game interface.

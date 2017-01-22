@@ -18,8 +18,8 @@
     "battleships-dev-tools": "../battleships-dev-tools"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-utils": "^0.6.0",
     "battleships-engine": "../battleships-engine",
-    "battleships-utils": "../battleships-utils",
     "battleships-ui-vanilla": "../battleships-ui-vanilla"
   }
 }

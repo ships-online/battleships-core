@@ -1,5 +1,5 @@
-import ObservableMixin from 'battleships-utils/src/observablemixin.js';
-import mix from 'battleships-utils/src/mix.js';
+import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
+import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 export default class Player {
 	constructor( data ) {
