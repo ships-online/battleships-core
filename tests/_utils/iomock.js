@@ -1,6 +1,6 @@
 import IoMock from 'src/_utils/iomock.js';
 
-describe( 'utils', () => {
+describe( '_utils', () => {
 	describe( 'IoMock', () => {
 		let ioInstance;
 
