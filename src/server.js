@@ -28,26 +28,21 @@ export default class Server {
 	 * @returns {Promise<String>} gameID Game id.
 	 */
 	create( gameData ) {
-		return new Promise( ( resolve ) => {
-			this._socket = io( 'localhost:8080' );
-
-			this._socket.on( 'connect', () => {
-				this.request( 'create', gameData ).then( ( gameID ) => {
-					this._catchSocketEvents( 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started' );
-					resolve( gameID );
-				} );
-			} );
-		} );
+		return this._create( 'create', gameData );
 	}
 
 	join( gameId ) {
+		return this._create( 'join', gameId );
+	}
+
+	_create( action, data ) {
 		return new Promise( ( resolve ) => {
-			this._socket = io( 'localhost:8080' );
+			this._socket = io( window.location.hostname + ':8080' );
 
 			this._socket.on( 'connect', () => {
-				this.request( 'join', gameId ).then( ( data ) => {
-					this._catchSocketEvents( 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started' );
-					resolve( data );
+				this.request( action, data ).then( ( response ) => {
+					this._catchSocketEvents( 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot' );
+					resolve( response );
 				} );
 			} );
 		} );
