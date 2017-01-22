@@ -1,3 +1,8 @@
+import EmitterMixin from 'battleships-utils/src/emittermixin.js';
+import mix from 'battleships-utils/src/mix.js';
+
+/* global io */
+
 /**
  * Class for communication between client and server.
  */
@@ -22,22 +27,28 @@ export default class Server {
 	 *
 	 * @returns {Promise<String>} gameID Game id.
 	 */
-	create( size, shipsConfig ) {
+	create( gameData ) {
 		return new Promise( ( resolve ) => {
-			this._socket = window.io( 'localhost:8080' );
+			this._socket = io( 'localhost:8080' );
 
 			this._socket.on( 'connect', () => {
-				this._request( 'create', { size, shipsConfig } ).then( ( gameID ) => resolve( gameID ) );
+				this.request( 'create', gameData ).then( ( gameID ) => {
+					this._catchSocketEvents( 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started' );
+					resolve( gameID );
+				} );
 			} );
 		} );
 	}
 
 	join( gameId ) {
 		return new Promise( ( resolve ) => {
-			this._socket = window.io( 'localhost:8080' );
+			this._socket = io( 'localhost:8080' );
 
 			this._socket.on( 'connect', () => {
-				this._request( 'join', gameId ).then( data => resolve( data ) );
+				this.request( 'join', gameId ).then( ( data ) => {
+					this._catchSocketEvents( 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started' );
+					resolve( data );
+				} );
 			} );
 		} );
 	}
@@ -45,15 +56,30 @@ export default class Server {
 	/**
 	 * Emits event to server and wait for immediate response.
 	 *
-	 * @private
 	 * @param {String} eventName
 	 * @param {Object} data Additional data.
 	 * @returns {Promise<data>}
 	 */
-	_request( eventName, ...args ) {
-		return new Promise( ( resolve ) => {
-			this._socket.once( `${ eventName }Response`, data => resolve( data ) );
+	request( eventName, ...args ) {
+		return new Promise( ( resolve, reject ) => {
+			this._socket.once( `${ eventName }Response`, ( data ) => {
+				data = data || {};
+
+				if ( data.error ) {
+					reject( data.error );
+				} else {
+					resolve( data.response );
+				}
+			} );
 			this._socket.emit( eventName, ...args  );
 		} );
 	}
+
+	_catchSocketEvents( ...args ) {
+		args.forEach( ( eventName ) => {
+			this._socket.on( eventName, ( data ) => this.fire( eventName, data ) );
+		} );
+	}
 }
+
+mix( Server, EmitterMixin );
