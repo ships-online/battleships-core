@@ -26,15 +26,13 @@ export default class Game {
 
 		this.set( 'isStarted', false );
 
+		this.set( 'activePlayer', false );
+
 		this.size = size;
 
-		this.player = new Player( {
-			battlefield: PlayerBattlefield.createWithShips( size, shipsSchema )
-		} );
+		this.player = new Player( PlayerBattlefield.createWithShips( size, shipsSchema ) );
 
-		this.opponent = new Player( {
-			battlefield: new OpponentBattlefield( size, shipsSchema )
-		} );
+		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ) );
 
 		this.view = new GameView( this );
 
@@ -84,13 +82,42 @@ export default class Game {
 	}
 
 	shoot( [ x, y ] ) {
+		if ( this.activePlayer != this.player.id ) {
+			return;
+		}
+
 		this._server.request( 'shoot', [ x, y ] ).then( ( data ) => {
 			this.opponent.battlefield.setField( data.position, data.type );
 
 			if ( data.sunk ) {
 				this.opponent.battlefield.shipsCollection.add( new Ship( data.sunk ) );
 			}
+
+			this.activePlayer = data.activePlayer;
 		} );
+	}
+
+	_attachEvents() {
+		this._server.on( 'joined', ( event, data ) => this.interestedPlayers = data.interestedPlayers );
+		this._server.on( 'ready', () => this.opponent.isReady = true );
+		this._server.on( 'gameOver', () => alert( 'Game is over.' ) );
+
+		this._server.on( 'shoot', ( evt, data ) => {
+			this.player.battlefield.setField( data.position, data.type );
+			this.activePlayer = data.activePlayer;
+		} );
+
+		this._server.on( 'started', ( evt, data ) => {
+			this.activePlayer = data.activePlayer;
+			this.isStarted = true;
+		} );
+	}
+
+	getPlayer( id ) {
+		return this.player.id == id ? this.player : this.opponent;
+	}
+
+	destroy() {
 	}
 
 	static create( element, size, shipsSchema ) {
@@ -98,12 +125,17 @@ export default class Game {
 			const server = new Server();
 			const game = new Game( server, size, shipsSchema );
 
-			game.player.battlefield.random();
 			game.player.isPresent = true;
 			game.player.isHost = true;
+			game.player.battlefield.random();
 
 			game._attachEvents();
-			server.on( 'accepted', () => game.opponent.isPresent = true );
+
+			server.on( 'accepted', ( evt, data ) => {
+				game.opponent.id = data.id;
+				game.opponent.isPresent = true;
+			} );
+
 			server.on( 'left', ( event, data ) => {
 				if ( game.opponent.isReady || game.opponent.isPresent ) {
 					game.opponent.isReady = false;
@@ -113,15 +145,19 @@ export default class Game {
 				game.interestedPlayers = data.interestedPlayers;
 			} );
 
-			server.create( game.gameData ).then( ( gameId ) => game.gameId = gameId );
+			server.create( game.gameData ).then( ( data ) => {
+				game.gameId = data.gameId;
+				game.player.id = data.playerId;
+			} );
+
 			element.appendChild( game.view.render() );
+
 			resolve( game );
 		} );
 	}
 
 	static join( element, gameId ) {
 		const server = new Server();
-		let game;
 
 		return server.join( gameId ).then( ( data ) => {
 			if ( data.status == 'started' ) {
@@ -129,33 +165,23 @@ export default class Game {
 			} else if ( data.status != 'available' ) {
 				alert( 'Sorry this game not exist.' );
 			} else {
-				game = new Game( server, data.gameData.size, data.gameData.shipsSchema );
+				const game = new Game( server, data.gameData.size, data.gameData.shipsSchema );
 
-				game.player.battlefield.random();
-				game.player.isPresent = false;
-				game.opponent.isReady = data.opponentIsReady;
+				game.player.id = data.playerId;
+				game.opponent.id = data.opponentId;
+				game.opponent.isReady = data.isOpponentReady;
 				game.interestedPlayers = data.interestedPlayers;
+				game.player.battlefield.random();
 
 				game._attachEvents();
 				server.on( 'accepted', () => alert( 'Game is started.' ) );
 				server.on( 'left', ( event, data ) => game.interestedPlayers = data.interestedPlayers );
 
 				element.appendChild( game.view.render() );
+
+				return game;
 			}
-
-			return game;
 		} );
-	}
-
-	_attachEvents(  ) {
-		this._server.on( 'joined', ( event, data ) => this.interestedPlayers = data.interestedPlayers );
-		this._server.on( 'ready', () => this.opponent.isReady = true );
-		this._server.on( 'started', () => this.isStarted = true );
-		this._server.on( 'gameOver', () => alert( 'Game is over.' ) );
-		this._server.on( 'shoot', ( evt, data ) => this.player.battlefield.setField( data.position, data.type ) );
-	}
-
-	destroy() {
 	}
 }
 
