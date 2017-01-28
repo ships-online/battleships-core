@@ -28,20 +28,22 @@ export default class Server {
 	 * @returns {Promise<String>} gameID Game id.
 	 */
 	create( gameData ) {
-		return this._create( 'create', gameData );
+		return this._connect( 'create', gameData );
 	}
 
 	join( gameId ) {
-		return this._create( 'join', gameId );
+		return this._connect( 'join', gameId );
 	}
 
-	_create( action, data ) {
+	_connect( action, data ) {
 		return new Promise( ( resolve ) => {
 			this._socket = io( window.location.hostname + ':8080' );
 
 			this._socket.on( 'connect', () => {
 				this.request( action, data ).then( ( response ) => {
-					this._catchSocketEvents( 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot' );
+					[ 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot' ].forEach( ( name ) => {
+						this._socket.on( name, data => this.fire( name, data ) );
+					} );
 					resolve( response );
 				} );
 			} );
@@ -49,10 +51,10 @@ export default class Server {
 	}
 
 	/**
-	 * Emits event to server and wait for immediate response.
+	 * Emits event to the socket server and wait for immediate response.
 	 *
 	 * @param {String} eventName
-	 * @param {Object} data Additional data.
+	 * @param {Array<*>} args Additional data.
 	 * @returns {Promise<data>}
 	 */
 	request( eventName, ...args ) {
@@ -67,12 +69,6 @@ export default class Server {
 				}
 			} );
 			this._socket.emit( eventName, ...args  );
-		} );
-	}
-
-	_catchSocketEvents( ...args ) {
-		args.forEach( ( eventName ) => {
-			this._socket.on( eventName, ( data ) => this.fire( eventName, data ) );
 		} );
 	}
 }

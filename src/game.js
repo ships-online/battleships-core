@@ -113,10 +113,6 @@ export default class Game {
 		} );
 	}
 
-	getPlayer( id ) {
-		return this.player.id == id ? this.player : this.opponent;
-	}
-
 	destroy() {
 	}
 
@@ -159,12 +155,8 @@ export default class Game {
 	static join( element, gameId ) {
 		const server = new Server();
 
-		return server.join( gameId ).then( ( data ) => {
-			if ( data.status == 'started' ) {
-				alert( 'Sorry this game has already started.' );
-			} else if ( data.status != 'available' ) {
-				alert( 'Sorry this game not exist.' );
-			} else {
+		return server.join( gameId )
+			.then( ( data ) => {
 				const game = new Game( server, data.gameData.size, data.gameData.shipsSchema );
 
 				game.player.id = data.playerId;
@@ -180,8 +172,8 @@ export default class Game {
 				element.appendChild( game.view.render() );
 
 				return game;
-			}
-		} );
+			} )
+			.catch( error => alert( error ) );
 	}
 }
 

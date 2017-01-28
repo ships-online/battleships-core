@@ -15,7 +15,7 @@ export default class Player {
 
 		this.set( 'isReady', false );
 
-		this.on( 'change:isReady', ( evt, name, value ) => battlefield.isLocked = value );
+		this.battlefield.bind( 'isLocked' ).to( this, 'isReady' );
 	}
 }
 
