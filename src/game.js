@@ -18,7 +18,7 @@ export default class Game {
 	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
 	 */
 	constructor( server, size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
-		this.gameData = { size, shipsSchema };
+		this.gameSettings = { size, shipsSchema };
 
 		this.set( 'gameId' );
 
@@ -141,7 +141,7 @@ export default class Game {
 				game.interestedPlayers = data.interestedPlayers;
 			} );
 
-			server.create( game.gameData ).then( ( data ) => {
+			server.create( game.gameSettings ).then( ( data ) => {
 				game.gameId = data.gameId;
 				game.player.id = data.playerId;
 			} );
@@ -157,7 +157,7 @@ export default class Game {
 
 		return server.join( gameId )
 			.then( ( data ) => {
-				const game = new Game( server, data.gameData.size, data.gameData.shipsSchema );
+				const game = new Game( server, data.gameSettings.size, data.gameSettings.shipsSchema );
 
 				game.player.id = data.playerId;
 				game.opponent.id = data.opponentId;

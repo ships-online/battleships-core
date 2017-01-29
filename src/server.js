@@ -27,8 +27,8 @@ export default class Server {
 	 *
 	 * @returns {Promise<String>} gameID Game id.
 	 */
-	create( gameData ) {
-		return this._connect( 'create', gameData );
+	create( gameSettings ) {
+		return this._connect( 'create', gameSettings );
 	}
 
 	join( gameId ) {
