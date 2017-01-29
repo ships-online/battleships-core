@@ -36,16 +36,19 @@ export default class Server {
 	}
 
 	_connect( action, data ) {
-		return new Promise( ( resolve ) => {
+		return new Promise( ( resolve, reject ) => {
 			this._socket = io( window.location.hostname + ':8080' );
 
 			this._socket.on( 'connect', () => {
-				this.request( action, data ).then( ( response ) => {
-					[ 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot' ].forEach( ( name ) => {
-						this._socket.on( name, data => this.fire( name, data ) );
-					} );
-					resolve( response );
-				} );
+				this.request( action, data )
+					.then( ( response ) => {
+						const events = [ 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot' ];
+
+						events.forEach( ( name ) => this._socket.on( name, data => this.fire( name, data ) ) );
+
+						resolve( response );
+					} )
+					.catch( reject );
 			} );
 		} );
 	}

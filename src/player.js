@@ -9,9 +9,7 @@ export default class Player {
 
 		this.isHost = false;
 
-		this.set( 'isPresent', false );
-
-		this.set( 'isActive', false );
+		this.set( 'isInGame', false );
 
 		this.set( 'isReady', false );
 

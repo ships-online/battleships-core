@@ -24,7 +24,10 @@ export default class Game {
 
 		this.set( 'interestedPlayers', 0 );
 
-		this.set( 'isStarted', false );
+		/**
+		 * @type {'available'|'battle'|'over'}
+		 */
+		this.set( 'status', 'available' );
 
 		this.set( 'activePlayer', false );
 
@@ -48,12 +51,16 @@ export default class Game {
 	}
 
 	accept() {
-		if ( this.player.isPresent ) {
-			throw new Error( 'Game is full.' );
+		if ( this.player.isInGame ) {
+			throw new Error( 'You are already in game.' );
+		}
+
+		if ( this.status != 'available' ) {
+			throw new Error( 'Not available.' );
 		}
 
 		this._server.request( 'accept' )
-			.then( () => this.player.isPresent = true )
+			.then( () => this.player.isInGame = true )
 			.catch( ( error ) => alert( error ) );
 	}
 
@@ -62,7 +69,7 @@ export default class Game {
 			throw new Error( 'You are ready already.' );
 		}
 
-		if ( !this.player.isPresent ) {
+		if ( !this.player.isInGame ) {
 			throw new Error( 'You need to join the game first.' );
 		}
 
@@ -82,8 +89,12 @@ export default class Game {
 	}
 
 	shoot( [ x, y ] ) {
+		if ( this.status != 'battle' ) {
+			throw new Error( 'Invalid game status.' );
+		}
+
 		if ( this.activePlayer != this.player.id ) {
-			return;
+			throw new Error( 'Not your turn.' );
 		}
 
 		this._server.request( 'shoot', [ x, y ] ).then( ( data ) => {
@@ -97,10 +108,16 @@ export default class Game {
 		} );
 	}
 
+	destroy() {
+	}
+
 	_attachEvents() {
 		this._server.on( 'joined', ( event, data ) => this.interestedPlayers = data.interestedPlayers );
 		this._server.on( 'ready', () => this.opponent.isReady = true );
-		this._server.on( 'gameOver', () => alert( 'Game is over.' ) );
+		this._server.on( 'gameOver', () => {
+			this.status = 'over';
+			alert( 'Game over' );
+		} );
 
 		this._server.on( 'shoot', ( evt, data ) => {
 			this.player.battlefield.setField( data.position, data.type );
@@ -109,11 +126,8 @@ export default class Game {
 
 		this._server.on( 'started', ( evt, data ) => {
 			this.activePlayer = data.activePlayer;
-			this.isStarted = true;
+			this.status = 'battle';
 		} );
-	}
-
-	destroy() {
 	}
 
 	static create( element, size, shipsSchema ) {
@@ -121,21 +135,24 @@ export default class Game {
 			const server = new Server();
 			const game = new Game( server, size, shipsSchema );
 
-			game.player.isPresent = true;
+			game.player.isInGame = true;
 			game.player.isHost = true;
 			game.player.battlefield.random();
 
 			game._attachEvents();
 
+			// @TODO: Rename event name to `opponentAccepted` and property id to `opponentId`.
 			server.on( 'accepted', ( evt, data ) => {
 				game.opponent.id = data.id;
-				game.opponent.isPresent = true;
+				game.opponent.isInGame = true;
 			} );
 
+			// @TODO: Rename event name to `opponentLeft`.
 			server.on( 'left', ( event, data ) => {
-				if ( game.opponent.isReady || game.opponent.isPresent ) {
+				if ( data.opponentId == game.opponent.id ) {
 					game.opponent.isReady = false;
-					game.opponent.isPresent = false;
+					game.opponent.isInGame = false;
+					game.status = 'available';
 				}
 
 				game.interestedPlayers = data.interestedPlayers;
@@ -166,14 +183,18 @@ export default class Game {
 				game.player.battlefield.random();
 
 				game._attachEvents();
-				server.on( 'accepted', () => alert( 'Game is started.' ) );
+
 				server.on( 'left', ( event, data ) => game.interestedPlayers = data.interestedPlayers );
+
+				// When player join the game it doesn't start the game yet.
+				// Player need to accept the game to start it.
+				// This event is fired when other player has accepted the game first.
+				server.on( 'accepted', () => this.status = 'over' );
 
 				element.appendChild( game.view.render() );
 
 				return game;
-			} )
-			.catch( error => alert( error ) );
+			} );
 	}
 }
 
