@@ -25,11 +25,13 @@ export default class Game {
 		this.set( 'interestedPlayers', 0 );
 
 		/**
-		 * @type {'available'|'battle'|'over'}
+		 * @type {'available'|'full'|'battle'}
 		 */
 		this.set( 'status', 'available' );
 
 		this.set( 'activePlayer', false );
+
+		this.set( '_gameInterrupt', null );
 
 		this.size = size;
 
@@ -50,6 +52,12 @@ export default class Game {
 		return document.URL + '#' + this.gameId;
 	}
 
+	play() {
+		return new Promise( ( resolve, reject ) => {
+			this.once( 'change:_gameInterrupt', ( evt, name, value ) => reject( value ) );
+		} );
+	}
+
 	accept() {
 		if ( this.player.isInGame ) {
 			throw new Error( 'You are already in game.' );
@@ -60,8 +68,11 @@ export default class Game {
 		}
 
 		this._server.request( 'accept' )
-			.then( () => this.player.isInGame = true )
-			.catch( ( error ) => alert( error ) );
+			.then( () => {
+				this.player.isInGame = true;
+				this.status = 'full';
+			} )
+			.catch( ( error ) => this._finishGame( error ) );
 	}
 
 	ready() {
@@ -81,11 +92,7 @@ export default class Game {
 
 		this.player.isReady = true;
 
-		this._server.request( 'ready', ships )
-			.catch( ( error ) => {
-				this.player.isReady = false;
-				alert( error );
-			} );
+		this._server.request( 'ready', ships ).catch( ( error ) => this._finishGame( error ) );
 	}
 
 	shoot( [ x, y ] ) {
@@ -109,25 +116,40 @@ export default class Game {
 	}
 
 	destroy() {
+		this.stopListening();
 	}
 
 	_attachEvents() {
-		this._server.on( 'joined', ( event, data ) => this.interestedPlayers = data.interestedPlayers );
-		this._server.on( 'ready', () => this.opponent.isReady = true );
-		this._server.on( 'gameOver', () => {
-			this.status = 'over';
-			alert( 'Game over' );
+		this.listenTo( this._server, 'joined', ( evt, data ) => this.interestedPlayers = data.interestedPlayers );
+
+		this.listenTo( this._server, 'left', ( event, data ) => {
+			if ( data.opponentId == this.opponent.id ) {
+				this.opponent.isReady = false;
+				this.opponent.isInGame = false;
+				this.status = 'available';
+			}
+
+			this.interestedPlayers = data.interestedPlayers;
 		} );
 
-		this._server.on( 'shoot', ( evt, data ) => {
+		this.listenTo( this._server, 'ready', () => this.opponent.isReady = true );
+
+		this.listenTo( this._server, 'started', ( evt, data ) => {
+			this.activePlayer = data.activePlayer;
+			this.status = 'battle';
+		} );
+
+		this.listenTo( this._server, 'shoot', ( evt, data ) => {
 			this.player.battlefield.setField( data.position, data.type );
 			this.activePlayer = data.activePlayer;
 		} );
 
-		this._server.on( 'started', ( evt, data ) => {
-			this.activePlayer = data.activePlayer;
-			this.status = 'battle';
-		} );
+		this.listenTo( this._server, 'gameOver', ( evt, data ) => this._finishGame( data ) );
+	}
+
+	_finishGame( reason ) {
+		this._gameInterrupt = reason;
+		this.destroy();
 	}
 
 	static create( element, size, shipsSchema ) {
@@ -141,21 +163,10 @@ export default class Game {
 
 			game._attachEvents();
 
-			// @TODO: Rename event name to `opponentAccepted` and property id to `opponentId`.
-			server.on( 'accepted', ( evt, data ) => {
+			game.listenTo( server, 'accepted', ( evt, data ) => {
 				game.opponent.id = data.id;
 				game.opponent.isInGame = true;
-			} );
-
-			// @TODO: Rename event name to `opponentLeft`.
-			server.on( 'left', ( event, data ) => {
-				if ( data.opponentId == game.opponent.id ) {
-					game.opponent.isReady = false;
-					game.opponent.isInGame = false;
-					game.status = 'available';
-				}
-
-				game.interestedPlayers = data.interestedPlayers;
+				game.status = 'full';
 			} );
 
 			server.create( game.gameSettings ).then( ( data ) => {
@@ -184,12 +195,10 @@ export default class Game {
 
 				game._attachEvents();
 
-				server.on( 'left', ( event, data ) => game.interestedPlayers = data.interestedPlayers );
-
 				// When player join the game it doesn't start the game yet.
 				// Player need to accept the game to start it.
 				// This event is fired when other player has accepted the game first.
-				server.on( 'accepted', () => this.status = 'over' );
+				game.listenTo( server, 'accepted', () => this._finishGame( 'started' ) );
 
 				element.appendChild( game.view.render() );
 
