@@ -24,14 +24,11 @@ export default class Game {
 
 		this.set( 'interestedPlayers', 0 );
 
-		/**
-		 * @type {'available'|'full'|'battle'}
-		 */
 		this.set( 'status', 'available' );
 
 		this.set( 'activePlayer', false );
 
-		this.set( '_gameInterrupt', null );
+		this.set( '_serverError', null );
 
 		this.size = size;
 
@@ -52,9 +49,9 @@ export default class Game {
 		return document.URL + '#' + this.gameId;
 	}
 
-	play() {
+	start() {
 		return new Promise( ( resolve, reject ) => {
-			this.once( 'change:_gameInterrupt', ( evt, name, value ) => reject( value ) );
+			this.once( 'change:_serverError', ( evt, name, value ) => reject( value ) );
 		} );
 	}
 
@@ -111,8 +108,17 @@ export default class Game {
 				this.opponent.battlefield.shipsCollection.add( new Ship( data.sunk ) );
 			}
 
-			this.activePlayer = data.activePlayer;
+			if ( data.winner ) {
+				this.status = 'over';
+				this.activePlayer = null;
+			} else {
+				this.activePlayer = data.activePlayer;
+			}
 		} );
+	}
+
+	requestRematch() {
+		this._server.request( 'rematch' );
 	}
 
 	destroy() {
@@ -132,7 +138,9 @@ export default class Game {
 			this.interestedPlayers = data.interestedPlayers;
 		} );
 
-		this.listenTo( this._server, 'ready', () => this.opponent.isReady = true );
+		this.listenTo( this._server, 'ready', () => {
+			this.opponent.isReady = true;
+		} );
 
 		this.listenTo( this._server, 'started', ( evt, data ) => {
 			this.activePlayer = data.activePlayer;
@@ -141,14 +149,29 @@ export default class Game {
 
 		this.listenTo( this._server, 'shoot', ( evt, data ) => {
 			this.player.battlefield.setField( data.position, data.type );
-			this.activePlayer = data.activePlayer;
+
+			if ( data.winner ) {
+				this.status = 'over';
+				this.activePlayer = null;
+			} else {
+				this.activePlayer = data.activePlayer;
+			}
 		} );
 
-		this.listenTo( this._server, 'gameOver', ( evt, data ) => this._finishGame( data ) );
+		this.listenTo( this._server, 'gameOver', ( evt, data ) => {
+			this._finishGame( data );
+		} );
+
+		this.listenTo( this._server, 'rematch', () => {
+			this.status = 'full';
+			this.opponent.reset();
+			this.player.reset();
+			this.player.battlefield.random();
+		} );
 	}
 
 	_finishGame( reason ) {
-		this._gameInterrupt = reason;
+		this._serverError = reason;
 		this.destroy();
 	}
 
@@ -161,13 +184,13 @@ export default class Game {
 			game.player.isHost = true;
 			game.player.battlefield.random();
 
-			game._attachEvents();
-
 			game.listenTo( server, 'accepted', ( evt, data ) => {
 				game.opponent.id = data.id;
 				game.opponent.isInGame = true;
 				game.status = 'full';
 			} );
+
+			game._attachEvents();
 
 			server.create( game.gameSettings ).then( ( data ) => {
 				game.gameId = data.gameId;
@@ -193,12 +216,12 @@ export default class Game {
 				game.interestedPlayers = data.interestedPlayers;
 				game.player.battlefield.random();
 
-				game._attachEvents();
-
 				// When player join the game it doesn't start the game yet.
 				// Player need to accept the game to start it.
 				// This event is fired when other player has accepted the game first.
 				game.listenTo( server, 'accepted', () => this._finishGame( 'started' ) );
+
+				game._attachEvents();
 
 				element.appendChild( game.view.render() );
 

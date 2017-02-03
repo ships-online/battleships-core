@@ -42,7 +42,7 @@ export default class Server {
 			this._socket.on( 'connect', () => {
 				this.request( action, data )
 					.then( ( response ) => {
-						const events = [ 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot' ];
+						const events = [ 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot', 'rematch' ];
 
 						events.forEach( ( name ) => this._socket.on( name, data => this.fire( name, data ) ) );
 

@@ -15,6 +15,11 @@ export default class Player {
 
 		this.battlefield.bind( 'isLocked' ).to( this, 'isReady' );
 	}
+
+	reset() {
+		this.battlefield.clear();
+		this.isReady = false;
+	}
 }
 
 mix( Player, ObservableMixin );
