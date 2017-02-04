@@ -3,53 +3,71 @@ import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 /* global io */
 
+const eventsToDelegate = [
+	'interestedPlayerJoined',
+	'interestedPlayerAccepted',
+	'playerLeft',
+	'playerReady',
+	'playerShoot',
+	'playerRequestRematch',
+	'battleStarted',
+	'gameOver',
+	'rematch'
+];
+
 /**
  * Class for communication between client and server.
  */
 export default class Server {
-	/**
-	 * Creates instance of Server class.
-	 *
-	 * @param {utils.EmitterMixin} gameEmitter Game emitter.
-	 */
 	constructor() {
 		/**
-		 * Web sockets instance.
+		 * Socket.io socket.
 		 *
 		 * @private
-		 * @type {io.socket}
+		 * @type {socket}
 		 */
 		this._socket = null;
 	}
 
 	/**
-	 * Creates connection with socket server.
-	 *
-	 * @returns {Promise<String>} gameID Game id.
+	 * @param {Object} gameSettings Game settings.
+	 * @param {Number} [gameSettings.size] Size of the battlefield - how many fields long height will be.
+	 * @param {Object} [gameSettings.shipsSchema] Schema with ships allowed on the battlefield.
+	 * @returns {Promise<String>} Promise that returns gameId when is resolved.
 	 */
 	create( gameSettings ) {
 		return this._connect( 'create', gameSettings );
 	}
 
+	/**
+	 * @param {String} gameId Game id.
+	 * @returns {Promise<Object>} Promise that returns gameSettings when is resolved.
+	 */
 	join( gameId ) {
 		return this._connect( 'join', gameId );
 	}
 
+	/**
+	 * Creates connection with the socket server and delegates socket events to this class.
+	 *
+	 * @private
+	 * @param {'create'|'join'} action Type of connection.
+	 * @param {Object|String} data Additional connection data.
+	 * @returns {Promise}
+	 */
 	_connect( action, data ) {
 		return new Promise( ( resolve, reject ) => {
 			this._socket = io( window.location.hostname + ':8080' );
 
-			this._socket.on( 'connect', () => {
-				this.request( action, data )
-					.then( ( response ) => {
-						const events = [ 'joined', 'left', 'accepted', 'gameOver', 'ready', 'started', 'shoot', 'rematch' ];
+			this.request( action, data )
+				.then( ( response ) => {
+					eventsToDelegate.forEach( ( name ) => {
+						this._socket.on( name, data => this.fire( name, data ) );
+					} );
 
-						events.forEach( ( name ) => this._socket.on( name, data => this.fire( name, data ) ) );
-
-						resolve( response );
-					} )
-					.catch( reject );
-			} );
+					resolve( response );
+				} )
+				.catch( reject );
 		} );
 	}
 
@@ -58,7 +76,7 @@ export default class Server {
 	 *
 	 * @param {String} eventName
 	 * @param {Array<*>} args Additional data.
-	 * @returns {Promise<data>}
+	 * @returns {Promise<response, error>}
 	 */
 	request( eventName, ...args ) {
 		return new Promise( ( resolve, reject ) => {

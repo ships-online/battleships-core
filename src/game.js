@@ -18,43 +18,104 @@ export default class Game {
 	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
 	 */
 	constructor( server, size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
+		/**
+		 * Game settings.
+		 *
+		 * @type {Object}
+		 */
 		this.gameSettings = { size, shipsSchema };
 
+		/**
+		 * Game id.
+		 *
+		 * @observable
+		 * @type {String}
+		 */
 		this.set( 'gameId' );
 
-		this.set( 'interestedPlayers', 0 );
+		/**
+		 * Number of interested players - players who have entered the invitation link.
+		 *
+		 * @observable
+		 * @type {Number}
+		 */
+		this.set( 'interestedPlayersNumber', 0 );
 
+		/**
+		 * Game status.
+		 *
+		 * @observable
+		 * @type {'available'|'full'|'battle'|'over'}
+		 */
 		this.set( 'status', 'available' );
 
+		/**
+		 * Id of active player.
+		 *
+		 * @observable
+		 * @type {String}
+		 */
 		this.set( 'activePlayer', false );
 
-		this.set( '_serverError', null );
-
-		this.size = size;
+		/**
+		 * Stores server error as observable property to reject `#start()` promise when error will be set.
+		 *
+		 * @private
+		 * @observable
+		 * @type {String}
+		 */
+		this.set( '_serverErrorName', null );
 
 		this.player = new Player( PlayerBattlefield.createWithShips( size, shipsSchema ) );
 
 		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ) );
 
+		/**
+		 * Game view.
+		 *
+		 * @type {GameView}
+		 */
 		this.view = new GameView( this );
 
+		/**
+		 * @private
+		 * @type {Server}
+		 */
 		this._server = server;
 	}
 
+	/**
+	 * Defines is current game is owned by a host.
+	 *
+	 * @returns {Boolean}
+	 */
 	get isHost() {
 		return this.player.isHost;
 	}
 
+	/**
+	 * Gets invite url.
+	 *
+	 * @returns {String}
+	 */
 	get inviteUrl() {
-		return document.URL + '#' + this.gameId;
+		return `${ document.URL }#${ this.gameId }`;
 	}
 
+	/**
+	 * Starts listen on errors from socket server.
+	 *
+	 * @returns {Promise<null, error>} Promise that returns error on reject.
+	 */
 	start() {
 		return new Promise( ( resolve, reject ) => {
-			this.once( 'change:_serverError', ( evt, name, value ) => reject( value ) );
+			this.once( 'change:_serverErrorName', ( evt, name, value ) => reject( value ) );
 		} );
 	}
 
+	/**
+	 * Accepts the game. Player who is interested in the game can accept it and finally join the game.
+	 */
 	accept() {
 		if ( this.player.isInGame ) {
 			throw new Error( 'You are already in game.' );
@@ -72,6 +133,9 @@ export default class Game {
 			.catch( ( error ) => this._finishGame( error ) );
 	}
 
+	/**
+	 * Let know other players in game that you have arranged your ships and you are ready to the battle.
+	 */
 	ready() {
 		if ( this.player.isReady ) {
 			throw new Error( 'You are ready already.' );
@@ -92,7 +156,12 @@ export default class Game {
 		this._server.request( 'ready', ships ).catch( ( error ) => this._finishGame( error ) );
 	}
 
-	shoot( [ x, y ] ) {
+	/**
+	 * Takes a shoot to specified position.
+	 *
+	 * @param {Array<Number, Number>} position Position on the battlefield.
+	 */
+	shoot( position ) {
 		if ( this.status != 'battle' ) {
 			throw new Error( 'Invalid game status.' );
 		}
@@ -101,7 +170,7 @@ export default class Game {
 			throw new Error( 'Not your turn.' );
 		}
 
-		this._server.request( 'shoot', [ x, y ] ).then( ( data ) => {
+		this._server.request( 'shoot', position ).then( ( data ) => {
 			this.opponent.battlefield.setField( data.position, data.type );
 
 			if ( data.sunk ) {
@@ -117,37 +186,63 @@ export default class Game {
 		} );
 	}
 
+	/**
+	 * Lest know other players in the game that you wan't a rematch.
+	 */
 	requestRematch() {
-		this._server.request( 'rematch' );
+		this._server.request( 'requestRematch' );
+		this.player.isWaitingForRematch = true;
 	}
 
+	/**
+	 * Render game view to the given element.
+	 *
+	 * @param {HTMLElement} element
+	 * @returns {Game}
+	 */
+	renderGameToElement( element ) {
+		element.appendChild( this.view.render() );
+
+		return this;
+	}
+
+	/**
+	 * Destroy the game, detach listeners.
+	 */
 	destroy() {
 		this.stopListening();
 	}
 
-	_attachEvents() {
-		this.listenTo( this._server, 'joined', ( evt, data ) => this.interestedPlayers = data.interestedPlayers );
+	_listenToTheServerEvents() {
+		// Player enter on the game URL but not accept the game yet.
+		this.listenTo( this._server, 'interestedPlayerJoined', ( evt, data ) => {
+			this.interestedPlayersNumber = data.interestedPlayersNumber;
+		} );
 
-		this.listenTo( this._server, 'left', ( event, data ) => {
+		// Player left the game before battle started.
+		this.listenTo( this._server, 'playerLeft', ( event, data ) => {
 			if ( data.opponentId == this.opponent.id ) {
 				this.opponent.isReady = false;
 				this.opponent.isInGame = false;
 				this.status = 'available';
 			}
 
-			this.interestedPlayers = data.interestedPlayers;
+			this.interestedPlayersNumber = data.interestedPlayersNumber;
 		} );
 
-		this.listenTo( this._server, 'ready', () => {
+		// Player is ready to the battle.
+		this.listenTo( this._server, 'playerReady', () => {
 			this.opponent.isReady = true;
 		} );
 
-		this.listenTo( this._server, 'started', ( evt, data ) => {
+		// The battle is started.
+		this.listenTo( this._server, 'battleStarted', ( evt, data ) => {
 			this.activePlayer = data.activePlayer;
 			this.status = 'battle';
 		} );
 
-		this.listenTo( this._server, 'shoot', ( evt, data ) => {
+		// Player shoot.
+		this.listenTo( this._server, 'playerShoot', ( evt, data ) => {
 			this.player.battlefield.setField( data.position, data.type );
 
 			if ( data.winner ) {
@@ -158,10 +253,12 @@ export default class Game {
 			}
 		} );
 
+		// Game is over, one of the players left the game after the battle was started.
 		this.listenTo( this._server, 'gameOver', ( evt, data ) => {
 			this._finishGame( data );
 		} );
 
+		// Both players requested rematch.
 		this.listenTo( this._server, 'rematch', () => {
 			this.status = 'full';
 			this.opponent.reset();
@@ -170,12 +267,26 @@ export default class Game {
 		} );
 	}
 
-	_finishGame( reason ) {
-		this._serverError = reason;
+	/**
+	 * Finishes the game by rejecting `start()` promise. This happens when server respond error.
+	 *
+	 * @private
+	 * @param {String} errorName Name of the error.
+	 */
+	_finishGame( errorName ) {
+		this._serverErrorName = errorName;
 		this.destroy();
 	}
 
-	static create( element, size, shipsSchema ) {
+	/**
+	 * Create the game.
+	 *
+	 * @static
+	 * @param {Number} size Size of the battlefield. How many fields width and height will be battlefield.
+	 * @param {Object} shipsSchema Defines how mety ships of specified types will be allowed in the game.
+	 * @returns {Promise} Promise that returns game instance when is resolved.
+	 */
+	static create( size, shipsSchema ) {
 		return new Promise( ( resolve ) => {
 			const server = new Server();
 			const game = new Game( server, size, shipsSchema );
@@ -184,26 +295,32 @@ export default class Game {
 			game.player.isHost = true;
 			game.player.battlefield.random();
 
-			game.listenTo( server, 'accepted', ( evt, data ) => {
+			// One of interested players have joined the game.
+			game.listenTo( server, 'interestedPlayerAccepted', ( evt, data ) => {
 				game.opponent.id = data.id;
 				game.opponent.isInGame = true;
 				game.status = 'full';
 			} );
 
-			game._attachEvents();
+			game._listenToTheServerEvents();
 
 			server.create( game.gameSettings ).then( ( data ) => {
 				game.gameId = data.gameId;
 				game.player.id = data.playerId;
 			} );
 
-			element.appendChild( game.view.render() );
-
 			resolve( game );
 		} );
 	}
 
-	static join( element, gameId ) {
+	/**
+	 * Join the game of given id.
+	 *
+	 * @static
+	 * @param {String} gameId Id of game you want to join.
+	 * @returns {Promise} Promise that returns game instance when is resolved and errorName when is rejected.
+	 */
+	static join( gameId ) {
 		const server = new Server();
 
 		return server.join( gameId )
@@ -213,17 +330,13 @@ export default class Game {
 				game.player.id = data.playerId;
 				game.opponent.id = data.opponentId;
 				game.opponent.isReady = data.isOpponentReady;
-				game.interestedPlayers = data.interestedPlayers;
+				game.interestedPlayersNumber = data.interestedPlayersNumber;
 				game.player.battlefield.random();
 
-				// When player join the game it doesn't start the game yet.
-				// Player need to accept the game to start it.
-				// This event is fired when other player has accepted the game first.
-				game.listenTo( server, 'accepted', () => this._finishGame( 'started' ) );
+				// One of the interested players have joined the game, so the game is over other interested players.
+				game.listenTo( server, 'interestedPlayerAccepted', () => this._finishGame( 'started' ) );
 
-				game._attachEvents();
-
-				element.appendChild( game.view.render() );
+				game._listenToTheServerEvents();
 
 				return game;
 			} );
