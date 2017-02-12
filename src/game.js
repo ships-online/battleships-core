@@ -8,8 +8,6 @@ import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
 import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 /**
- * Game interface.
- *
  * @mixes ObservableMixin
  */
 export default class Game {
