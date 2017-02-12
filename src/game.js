@@ -10,10 +10,11 @@ import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 /**
  * Game interface.
  *
- * @memberOf game
+ * @mixes ObservableMixin
  */
 export default class Game {
 	/**
+	 * @param {Server} server Server instance.
 	 * @param {Number} [size=10] Size of the battlefield.
 	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
 	 */
@@ -23,7 +24,7 @@ export default class Game {
 		 *
 		 * @type {Object}
 		 */
-		this.gameSettings = { size, shipsSchema };
+		this.settings = { size, shipsSchema };
 
 		/**
 		 * Game id.
@@ -53,9 +54,9 @@ export default class Game {
 		 * Id of active player.
 		 *
 		 * @observable
-		 * @type {String}
+		 * @type {null|String}
 		 */
-		this.set( 'activePlayer', false );
+		this.set( 'activePlayer', null );
 
 		/**
 		 * Stores server error as observable property to reject `#start()` promise when error will be set.
@@ -66,8 +67,18 @@ export default class Game {
 		 */
 		this.set( '_serverErrorName', null );
 
+		/**
+		 * Player.
+		 *
+		 * @type {Player}
+		 */
 		this.player = new Player( PlayerBattlefield.createWithShips( size, shipsSchema ) );
 
+		/**
+		 * Opponent.
+		 *
+		 * @type {Player}
+		 */
 		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ) );
 
 		/**
@@ -134,7 +145,7 @@ export default class Game {
 	}
 
 	/**
-	 * Let know other players in game that you have arranged your ships and you are ready to the battle.
+	 * Lets know other players in game that you have arranged your ships and you are ready to the battle.
 	 */
 	ready() {
 		if ( this.player.isReady ) {
@@ -171,7 +182,7 @@ export default class Game {
 		}
 
 		this._server.request( 'shoot', position ).then( ( data ) => {
-			this.opponent.battlefield.setField( data.position, data.type );
+			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
 				this.opponent.battlefield.shipsCollection.add( new Ship( data.sunk ) );
@@ -187,7 +198,7 @@ export default class Game {
 	}
 
 	/**
-	 * Lest know other players in the game that you wan't a rematch.
+	 * Lets know other players in the game that you wan't a rematch.
 	 */
 	requestRematch() {
 		this._server.request( 'requestRematch' );
@@ -195,7 +206,7 @@ export default class Game {
 	}
 
 	/**
-	 * Render game view to the given element.
+	 * Renders game view to the given element.
 	 *
 	 * @param {HTMLElement} element
 	 * @returns {Game}
@@ -207,12 +218,17 @@ export default class Game {
 	}
 
 	/**
-	 * Destroy the game, detach listeners.
+	 * Destroys the game, detach listeners.
 	 */
 	destroy() {
 		this.stopListening();
 	}
 
+	/**
+	 * Handles socket server events.
+	 *
+	 * @private
+	 */
 	_listenToTheServerEvents() {
 		// Player enter on the game URL but not accept the game yet.
 		this.listenTo( this._server, 'interestedPlayerJoined', ( evt, data ) => {
@@ -243,7 +259,7 @@ export default class Game {
 
 		// Player shoot.
 		this.listenTo( this._server, 'playerShoot', ( evt, data ) => {
-			this.player.battlefield.setField( data.position, data.type );
+			this.player.battlefield.markAs( data.position, data.type );
 
 			if ( data.winner ) {
 				this.status = 'over';
@@ -279,7 +295,7 @@ export default class Game {
 	}
 
 	/**
-	 * Create the game.
+	 * Creates the game.
 	 *
 	 * @static
 	 * @param {Number} size Size of the battlefield. How many fields width and height will be battlefield.
@@ -304,7 +320,7 @@ export default class Game {
 
 			game._listenToTheServerEvents();
 
-			server.create( game.gameSettings ).then( ( data ) => {
+			server.create( game.settings ).then( ( data ) => {
 				game.gameId = data.gameId;
 				game.player.id = data.playerId;
 			} );
@@ -314,7 +330,7 @@ export default class Game {
 	}
 
 	/**
-	 * Join the game of given id.
+	 * Joins the game of given id.
 	 *
 	 * @static
 	 * @param {String} gameId Id of game you want to join.
@@ -325,7 +341,7 @@ export default class Game {
 
 		return server.join( gameId )
 			.then( ( data ) => {
-				const game = new Game( server, data.gameSettings.size, data.gameSettings.shipsSchema );
+				const game = new Game( server, data.settings.size, data.settings.shipsSchema );
 
 				game.player.id = data.playerId;
 				game.opponent.id = data.opponentId;

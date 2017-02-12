@@ -1,5 +1,11 @@
 class IoMock {
 	constructor() {
+		/**
+		 * Stores events with callbacks.
+		 *
+		 * @private
+		 * @type {Object}
+		 */
 		this._events = {};
 	}
 
@@ -17,6 +23,11 @@ class IoMock {
 		this._events[ event ].push( callback );
 	}
 
+	/**
+	 * For API compatibility.
+	 *
+	 * @param args
+	 */
 	once( ...args ) {
 		this.on( ...args );
 	}

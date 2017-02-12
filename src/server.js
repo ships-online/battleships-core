@@ -17,6 +17,8 @@ const eventsToDelegate = [
 
 /**
  * Class for communication between client and server.
+ *
+ * @mixes EmitterMixin
  */
 export default class Server {
 	constructor() {
@@ -30,18 +32,18 @@ export default class Server {
 	}
 
 	/**
-	 * @param {Object} gameSettings Game settings.
-	 * @param {Number} [gameSettings.size] Size of the battlefield - how many fields long height will be.
-	 * @param {Object} [gameSettings.shipsSchema] Schema with ships allowed on the battlefield.
+	 * @param {Object} settings Game settings.
+	 * @param {Number} [settings.size] Size of the battlefield - how many fields long height will be.
+	 * @param {Object} [settings.shipsSchema] Schema with ships allowed on the battlefield.
 	 * @returns {Promise<String>} Promise that returns gameId when is resolved.
 	 */
-	create( gameSettings ) {
-		return this._connect( 'create', gameSettings );
+	create( settings ) {
+		return this._connect( 'create', settings );
 	}
 
 	/**
 	 * @param {String} gameId Game id.
-	 * @returns {Promise<Object>} Promise that returns gameSettings when is resolved.
+	 * @returns {Promise<Object>} Promise that returns settings when is resolved.
 	 */
 	join( gameId ) {
 		return this._connect( 'join', gameId );

@@ -4,6 +4,8 @@ import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 export default class Player {
 	/**
 	 * @param {Battlefield} battlefield Battlefield instance.
+	 *
+	 * @mixes ObservableMixin
 	 */
 	constructor( battlefield ) {
 		/**
@@ -56,7 +58,7 @@ export default class Player {
 	}
 
 	/**
-	 * Reset player data to default values.
+	 * Resets player data to default values.
 	 */
 	reset() {
 		this.battlefield.reset();
