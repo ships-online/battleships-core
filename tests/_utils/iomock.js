@@ -1,11 +1,9 @@
-import IoMock from 'src/_utils/iomock.js';
+import { ioMock, socketMock } from 'src/_utils/iomock.js';
 
 describe( '_utils', () => {
 	describe( 'IoMock', () => {
-		let ioInstance;
-
-		beforeEach( () => {
-			ioInstance = new IoMock();
+		it( 'should return the same socket instance', () => {
+			expect( ioMock() ).to.equal( socketMock );
 		} );
 
 		describe( 'on()', () => {
@@ -13,9 +11,9 @@ describe( '_utils', () => {
 				const expectedEvent = 'someEvent';
 				const expectedCallback = sinon.spy();
 
-				ioInstance.on( expectedEvent, expectedCallback );
+				socketMock.on( expectedEvent, expectedCallback );
 
-				expect( ioInstance._events[ expectedEvent ] ).to.include( expectedCallback );
+				expect( socketMock._events[ expectedEvent ] ).to.include( expectedCallback );
 			} );
 
 			it( 'should store multiple events with multiple callbacks', () => {
@@ -24,13 +22,13 @@ describe( '_utils', () => {
 				const otherExpectedEvent = 'otherEvent';
 				const otherExpectedCallback = sinon.spy();
 
-				ioInstance.on( expectedEvent, expectedCallback );
-				ioInstance.on( expectedEvent, otherExpectedCallback );
-				ioInstance.on( otherExpectedEvent, expectedCallback );
-				ioInstance.on( otherExpectedEvent, otherExpectedCallback );
+				socketMock.on( expectedEvent, expectedCallback );
+				socketMock.on( expectedEvent, otherExpectedCallback );
+				socketMock.on( otherExpectedEvent, expectedCallback );
+				socketMock.on( otherExpectedEvent, otherExpectedCallback );
 
-				expect( ioInstance._events[ expectedEvent ] ).to.include.members( [ expectedCallback, otherExpectedCallback ] );
-				expect( ioInstance._events[ otherExpectedEvent ] ).to.include.members( [ expectedCallback, otherExpectedCallback ] );
+				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ expectedCallback, otherExpectedCallback ] );
+				expect( socketMock._events[ otherExpectedEvent ] ).to.include.members( [ expectedCallback, otherExpectedCallback ] );
 			} );
 		} );
 
@@ -40,13 +38,13 @@ describe( '_utils', () => {
 				const expectedCallback = sinon.spy();
 				const otherExpectedCallback = sinon.spy();
 
-				ioInstance._events = {
+				socketMock._events = {
 					[expectedEvent]: [ expectedCallback, otherExpectedCallback ]
 				};
 
-				ioInstance.off( expectedEvent, expectedCallback );
+				socketMock.off( expectedEvent, expectedCallback );
 
-				expect( ioInstance._events[ expectedEvent ] ).to.include.members( [ otherExpectedCallback ] );
+				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ otherExpectedCallback ] );
 			} );
 
 			it( 'should do nothing if callback is not attached to event', () => {
@@ -54,13 +52,13 @@ describe( '_utils', () => {
 				const expectedCallback = sinon.spy();
 				const fakeCallback = sinon.spy();
 
-				ioInstance._events = {
+				socketMock._events = {
 					[expectedEvent]: [ expectedCallback ]
 				};
 
-				ioInstance.off( expectedEvent, fakeCallback );
+				socketMock.off( expectedEvent, fakeCallback );
 
-				expect( ioInstance._events[ expectedEvent ] ).to.include.members( [ expectedCallback ] );
+				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ expectedCallback ] );
 			} );
 
 			it( 'should do nothing if event does not exist', () => {
@@ -68,13 +66,13 @@ describe( '_utils', () => {
 				const expectedCallback = sinon.spy();
 				const fakeEvent = 'fakeEvent';
 
-				ioInstance._events = {
+				socketMock._events = {
 					[expectedEvent]: [ expectedCallback ]
 				};
 
-				ioInstance.off( fakeEvent, expectedCallback );
+				socketMock.off( fakeEvent, expectedCallback );
 
-				expect( ioInstance._events[ expectedEvent ] ).to.include.members( [ expectedCallback ] );
+				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ expectedCallback ] );
 			} );
 		} );
 
@@ -85,12 +83,12 @@ describe( '_utils', () => {
 				const otherExpectedCallback = sinon.spy();
 				const unexpectedCallback = sinon.spy();
 
-				ioInstance._events = {
+				socketMock._events = {
 					[expectedEvent]: [ expectedCallback, otherExpectedCallback ],
 					'otherEvent': [ unexpectedCallback ]
 				};
 
-				ioInstance.emit( expectedEvent );
+				socketMock.emit( expectedEvent );
 
 				expect( expectedCallback ).to.be.called;
 				expect( otherExpectedCallback ).to.be.called;
@@ -101,11 +99,11 @@ describe( '_utils', () => {
 				const expectedEvent = 'someEvent';
 				const expectedCallback = sinon.spy();
 
-				ioInstance._events = {
+				socketMock._events = {
 					[expectedEvent]: [ expectedCallback ]
 				};
 
-				ioInstance.emit( expectedEvent, 'param1', 'param2' );
+				socketMock.emit( expectedEvent, 'param1', 'param2' );
 
 				sinon.assert.calledWithExactly( expectedCallback, 'param1', 'param2' );
 			} );

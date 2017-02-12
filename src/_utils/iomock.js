@@ -1,4 +1,4 @@
-class IoMock {
+class SocketMock {
 	constructor() {
 		/**
 		 * Stores events with callbacks.
@@ -66,8 +66,10 @@ class IoMock {
 	}
 }
 
-const ioMockInstance = new IoMock();
+const socket = new SocketMock();
 
-export default function () {
-	return ioMockInstance;
+export const socketMock = socket;
+
+export function ioMock() {
+	return socket;
 }
