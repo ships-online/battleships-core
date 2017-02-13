@@ -83,8 +83,6 @@ export default class Server {
 	request( eventName, ...args ) {
 		return new Promise( ( resolve, reject ) => {
 			this._socket.once( `${ eventName }Response`, ( data ) => {
-				data = data || {};
-
 				if ( data.error ) {
 					reject( data.error );
 				} else {

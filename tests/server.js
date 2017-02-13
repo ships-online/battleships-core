@@ -2,26 +2,26 @@ import Server from 'src/server.js';
 import { ioMock, socketMock } from 'src/_utils/iomock.js';
 
 describe( 'Server', () => {
-	let server, spy;
+	let server, emitSpy;
 
 	beforeEach( () => {
 		window.io = ioMock;
 		server = new Server();
-		spy = sinon.spy( socketMock, 'emit' );
+		emitSpy = sinon.spy( socketMock, 'emit' );
 	} );
 
 	afterEach( () => {
 		window.io = undefined;
-		spy.restore();
+		emitSpy.restore();
 	} );
 
 	describe( 'connect()', () => {
 		it( 'should return promise and resolve with gameId', ( done ) => {
 			server.create( { foo: 'bar' } ).then( ( gameId ) => {
-				expect( spy.calledTwice ).to.true;
+				expect( emitSpy.calledTwice ).to.true;
 
-				expect( spy.firstCall.args[ 0 ] ).to.equal( 'create' );
-				expect( spy.firstCall.args[ 1 ] ).to.deep.equal( { foo: 'bar' } );
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'create' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.deep.equal( { foo: 'bar' } );
 
 				expect( gameId ).to.equal( 'someId' );
 				done();
@@ -32,10 +32,10 @@ describe( 'Server', () => {
 
 		it( 'should return promise and reject with error', ( done ) => {
 			server.create( { foo: 'bar' } ).catch( ( error ) => {
-				expect( spy.calledTwice ).to.true;
+				expect( emitSpy.calledTwice ).to.true;
 
-				expect( spy.firstCall.args[ 0 ] ).to.equal( 'create' );
-				expect( spy.firstCall.args[ 1 ] ).to.deep.equal( { foo: 'bar' } );
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'create' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.deep.equal( { foo: 'bar' } );
 
 				expect( error ).to.equal( 'error' );
 				done();
@@ -43,15 +43,52 @@ describe( 'Server', () => {
 
 			socketMock.emit( 'createResponse', { error: 'error' } );
 		} );
+
+		it( 'should delegate socket events', ( done ) => {
+			server.create( { foo: 'bar' } ).then( () => {
+				const spy = sinon.spy();
+
+				server.on( 'interestedPlayerJoined', spy );
+				server.on( 'interestedPlayerAccepted', spy );
+				server.on( 'playerLeft', spy );
+				server.on( 'playerReady', spy );
+				server.on( 'playerShoot', spy );
+				server.on( 'playerRequestRematch', spy );
+				server.on( 'battleStarted', spy );
+				server.on( 'gameOver', spy );
+				server.on( 'rematch', spy );
+
+				socketMock.emit( 'interestedPlayerJoined' );
+				socketMock.emit( 'interestedPlayerAccepted' );
+				socketMock.emit( 'playerLeft' );
+				socketMock.emit( 'playerReady' );
+				socketMock.emit( 'playerShoot' );
+				socketMock.emit( 'playerRequestRematch' );
+				socketMock.emit( 'battleStarted' );
+				socketMock.emit( 'gameOver' );
+				socketMock.emit( 'rematch' );
+
+				expect( spy.callCount ).to.equal( 9 );
+
+				socketMock.emit( 'otherEvent' );
+
+				// Stil 9.
+				expect( spy.callCount ).to.equal( 9 );
+
+				done();
+			} );
+
+			socketMock.emit( 'createResponse', { response: { foo: 'bar' } } );
+		} );
 	} );
 
 	describe( 'join()', () => {
 		it( 'should return promise and resolve with gameId', ( done ) => {
 			server.join( 'someId' ).then( ( settings ) => {
-				expect( spy.calledTwice ).to.true;
+				expect( emitSpy.calledTwice ).to.true;
 
-				expect( spy.firstCall.args[ 0 ] ).to.equal( 'join' );
-				expect( spy.firstCall.args[ 1 ] ).to.deep.equal( 'someId' );
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'join' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.deep.equal( 'someId' );
 
 				expect( settings ).to.deep.equal( { foo: 'bar' } );
 				done();
@@ -62,10 +99,10 @@ describe( 'Server', () => {
 
 		it( 'should return promise and reject with error', ( done ) => {
 			server.join( 'someId' ).catch( ( error ) => {
-				expect( spy.calledTwice ).to.true;
+				expect( emitSpy.calledTwice ).to.true;
 
-				expect( spy.firstCall.args[ 0 ] ).to.equal( 'join' );
-				expect( spy.firstCall.args[ 1 ] ).to.deep.equal( 'someId' );
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'join' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.deep.equal( 'someId' );
 
 				expect( error ).to.deep.equal( 'error' );
 				done();
@@ -73,12 +110,49 @@ describe( 'Server', () => {
 
 			socketMock.emit( 'joinResponse', { error: 'error' } );
 		} );
+
+		it( 'should delegate socket events', ( done ) => {
+			server.join( 'someId' ).then( () => {
+				const spy = sinon.spy();
+
+				server.on( 'interestedPlayerJoined', spy );
+				server.on( 'interestedPlayerAccepted', spy );
+				server.on( 'playerLeft', spy );
+				server.on( 'playerReady', spy );
+				server.on( 'playerShoot', spy );
+				server.on( 'playerRequestRematch', spy );
+				server.on( 'battleStarted', spy );
+				server.on( 'gameOver', spy );
+				server.on( 'rematch', spy );
+
+				socketMock.emit( 'interestedPlayerJoined' );
+				socketMock.emit( 'interestedPlayerAccepted' );
+				socketMock.emit( 'playerLeft' );
+				socketMock.emit( 'playerReady' );
+				socketMock.emit( 'playerShoot' );
+				socketMock.emit( 'playerRequestRematch' );
+				socketMock.emit( 'battleStarted' );
+				socketMock.emit( 'gameOver' );
+				socketMock.emit( 'rematch' );
+
+				expect( spy.callCount ).to.equal( 9 );
+
+				socketMock.emit( 'otherEvent' );
+
+				// Stil 9.
+				expect( spy.callCount ).to.equal( 9 );
+
+				done();
+			} );
+
+			socketMock.emit( 'joinResponse', { response: { foo: 'bar' } } );
+		} );
 	} );
 
 	describe( 'request()', () => {
 		beforeEach( ( done ) => {
 			server.create().then( () => {
-				spy.reset();
+				emitSpy.reset();
 				done();
 			} );
 			socketMock.emit( 'createResponse', { response: 'someId' } );
@@ -89,10 +163,10 @@ describe( 'Server', () => {
 			const responseData = { lorem: 'ipsum' };
 
 			server.request( 'doSomething', requestData ).then( ( response ) => {
-				expect( spy.calledTwice ).to.true;
+				expect( emitSpy.calledTwice ).to.true;
 
-				expect( spy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
-				expect( spy.firstCall.args[ 1 ] ).to.deep.equal( requestData );
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.deep.equal( requestData );
 
 				expect( response ).to.equal( responseData );
 				done();
@@ -106,10 +180,10 @@ describe( 'Server', () => {
 			const error = 'error';
 
 			server.request( 'doSomething', requestData ).catch( ( error ) => {
-				expect( spy.calledTwice ).to.true;
+				expect( emitSpy.calledTwice ).to.true;
 
-				expect( spy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
-				expect( spy.firstCall.args[ 1 ] ).to.deep.equal( requestData );
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.deep.equal( requestData );
 
 				expect( error ).to.equal( error );
 				done();
