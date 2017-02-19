@@ -57,7 +57,7 @@ export default class Game {
 		this.set( 'activePlayer', null );
 
 		/**
-		 * Stores server error as observable property to reject `#start()` promise when error will be set.
+		 * Stores server error as observable property to reject `#start()` promise when error occurs.
 		 *
 		 * @private
 		 * @observable
@@ -87,6 +87,8 @@ export default class Game {
 		this.view = new GameView( this );
 
 		/**
+		 * Server instance.
+		 *
 		 * @private
 		 * @type {Server}
 		 */
@@ -94,7 +96,7 @@ export default class Game {
 	}
 
 	/**
-	 * Defines is current game is owned by a host.
+	 * Defines if current game is owned by a host.
 	 *
 	 * @returns {Boolean}
 	 */
@@ -103,7 +105,7 @@ export default class Game {
 	}
 
 	/**
-	 * Gets invite url.
+	 * Returns invite url.
 	 *
 	 * @returns {String}
 	 */
@@ -199,7 +201,7 @@ export default class Game {
 	}
 
 	/**
-	 * Accepts the game. Player who is interested in the game can accept it and finally join the game.
+	 * Accepts the game. Player who is interested in the game can accept it and join the game.
 	 */
 	accept() {
 		if ( this.player.isInGame ) {
@@ -219,7 +221,7 @@ export default class Game {
 	}
 
 	/**
-	 * Lets know other players in game that you have arranged your ships and you are ready to the battle.
+	 * Informs other players in the game that you have arranged your ships and you are ready to the battle.
 	 */
 	ready() {
 		if ( this.player.isReady ) {
@@ -242,7 +244,7 @@ export default class Game {
 	}
 
 	/**
-	 * Takes a shoot to specified position.
+	 * Takes a shoot the specified position.
 	 *
 	 * @param {Array<Number, Number>} position Position on the battlefield.
 	 */
@@ -272,7 +274,7 @@ export default class Game {
 	}
 
 	/**
-	 * Lets know other players in the game that you want a rematch.
+	 * Informs other players in the game that you want a rematch.
 	 */
 	requestRematch() {
 		if ( this.status != 'over' ) {
@@ -291,7 +293,7 @@ export default class Game {
 	}
 
 	/**
-	 * Handles socket server events.
+	 * Handles common socket server events.
 	 *
 	 * @private
 	 */
@@ -301,7 +303,7 @@ export default class Game {
 			this.interestedPlayersNumber = data.interestedPlayersNumber;
 		} );
 
-		// Player left the game before battle started.
+		// Player left the game before battle start.
 		this.listenTo( this._server, 'playerLeft', ( event, data ) => {
 			if ( data.opponentId == this.opponent.id ) {
 				this.opponent.id = null;
@@ -313,7 +315,7 @@ export default class Game {
 			this.interestedPlayersNumber = data.interestedPlayersNumber;
 		} );
 
-		// Player is ready to the battle.
+		// Player is ready for the battle.
 		this.listenTo( this._server, 'playerReady', () => {
 			this.opponent.isReady = true;
 		} );
@@ -351,7 +353,7 @@ export default class Game {
 	}
 
 	/**
-	 * Finishes the game by rejecting `start()` promise. This happens when server respond error.
+	 * Finishes the game by rejecting `start()` promise. This happens when server respond with error.
 	 *
 	 * @private
 	 * @param {String} errorName Name of the error.

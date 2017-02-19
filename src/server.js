@@ -3,6 +3,9 @@ import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 /* global io */
 
+/**
+ * This events will be delegates to server class from the socket instance.
+ */
 const eventsToDelegate = [
 	'interestedPlayerJoined',
 	'interestedPlayerAccepted',
@@ -23,7 +26,7 @@ const eventsToDelegate = [
 export default class Server {
 	constructor() {
 		/**
-		 * Socket.io socket.
+		 * Socket instance.
 		 *
 		 * @private
 		 * @type {socket}
@@ -32,6 +35,8 @@ export default class Server {
 	}
 
 	/**
+	 * Connects to the socket server and creates new game on the server side.
+	 *
 	 * @param {Object} settings Game settings.
 	 * @param {Number} [settings.size] Size of the battlefield - how many fields long height will be.
 	 * @param {Object} [settings.shipsSchema] Schema with ships allowed on the battlefield.
@@ -42,6 +47,8 @@ export default class Server {
 	}
 
 	/**
+	 * Connects to the socket server and joins to the existing game.
+	 *
 	 * @param {String} gameId Game id.
 	 * @returns {Promise<Object>} Promise that returns settings when is resolved.
 	 */
@@ -50,7 +57,7 @@ export default class Server {
 	}
 
 	/**
-	 * Creates connection with the socket server and delegates socket events to this class.
+	 * Connects to the socket server and delegates socket events to this class.
 	 *
 	 * @private
 	 * @param {'create'|'join'} action Type of connection.
@@ -74,7 +81,7 @@ export default class Server {
 	}
 
 	/**
-	 * Emits event to the socket server and wait for immediate response.
+	 * Emits event to the socket server and waits for immediate response.
 	 *
 	 * @param {String} eventName
 	 * @param {Array<*>} args Additional data.

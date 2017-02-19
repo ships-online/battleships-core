@@ -1,11 +1,14 @@
 import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
 import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
+/**
+ * Class for representing player and opponent.
+ *
+ * @mixes ObservableMixin
+ */
 export default class Player {
 	/**
 	 * @param {Battlefield} battlefield Battlefield instance.
-	 *
-	 * @mixes ObservableMixin
 	 */
 	constructor( battlefield ) {
 		/**
@@ -23,14 +26,14 @@ export default class Player {
 		this.battlefield = battlefield;
 
 		/**
-		 * Defines if players is a host.
+		 * Defines if player is a host.
 		 *
 		 * @type {Boolean}
 		 */
 		this.isHost = false;
 
 		/**
-		 * Defines if player is in game.
+		 * Defines if player is in game (player can enter on game page but not join to the game).
 		 *
 		 * @observable
 		 * @type {Boolean}
@@ -38,7 +41,7 @@ export default class Player {
 		this.set( 'isInGame', false );
 
 		/**
-		 * Defines if player is ready.
+		 * Defines if player is ready (player has arranged his battlefield and is ready for the battle).
 		 *
 		 * @observable
 		 * @type {Boolean}
@@ -46,7 +49,7 @@ export default class Player {
 		this.set( 'isReady', false );
 
 		/**
-		 * Defines if player requested rematch and waiting for it.
+		 * Defines if player requested rematch and is waiting for it.
 		 *
 		 * @observable
 		 * @type {Boolean}
@@ -58,7 +61,7 @@ export default class Player {
 	}
 
 	/**
-	 * Resets player data to default values.
+	 * Resets player data to values before the battle.
 	 */
 	reset() {
 		this.battlefield.reset();
