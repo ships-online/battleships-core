@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@ckeditor/ckeditor5-utils": "^0.7.0",
-    "battleships-engine": "git@github.com:ships-online/battleships-engine.git",
-    "battleships-ui-vanilla": "git@github.com:ships-online/battleships-ui-vanilla.git"
+    "battleships-engine": "https://github.com/ships-online/battleships-engine.git",
+    "battleships-ui-vanilla": "https://github.com/ships-online/battleships-ui-vanilla.git"
   }
 }
