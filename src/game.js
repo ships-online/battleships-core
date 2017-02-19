@@ -30,7 +30,7 @@ export default class Game {
 		 * @observable
 		 * @type {String}
 		 */
-		this.set( 'gameId' );
+		this.set( 'gameId', null );
 
 		/**
 		 * Number of interested players - players who have entered the invitation link.
@@ -112,6 +112,82 @@ export default class Game {
 	}
 
 	/**
+	 * Creates the game.
+	 *
+	 * @static
+	 * @param {Number} size Size of the battlefield. How many fields width and height will be battlefield.
+	 * @param {Object} shipsSchema Defines how mety ships of specified types will be allowed in the game.
+	 * @returns {Promise} Promise that returns game instance when is resolved.
+	 */
+	static create( size, shipsSchema ) {
+		return new Promise( ( resolve ) => {
+			const server = new Server();
+			const game = new Game( server, size, shipsSchema );
+
+			game.player.isInGame = true;
+			game.player.isHost = true;
+			game.player.battlefield.random();
+
+			game._listenToTheServerEvents();
+
+			// One of interested players have joined the game.
+			game.listenTo( server, 'interestedPlayerAccepted', ( evt, data ) => {
+				game.opponent.id = data.id;
+				game.opponent.isInGame = true;
+				game.status = 'full';
+			} );
+
+			server.create( game.settings ).then( ( data ) => {
+				game.gameId = data.gameId;
+				game.player.id = data.playerId;
+			} );
+
+			resolve( game );
+		} );
+	}
+
+	/**
+	 * Joins the game of given id.
+	 *
+	 * @static
+	 * @param {String} gameId Id of game you want to join.
+	 * @returns {Promise} Promise that returns game instance when is resolved and errorName when is rejected.
+	 */
+	static join( gameId ) {
+		const server = new Server();
+
+		return server.join( gameId )
+			.then( ( data ) => {
+				const game = new Game( server, data.settings.size, data.settings.shipsSchema );
+
+				game.player.id = data.playerId;
+				game.opponent.id = data.opponentId;
+				game.opponent.isReady = data.isOpponentReady;
+				game.interestedPlayersNumber = data.interestedPlayersNumber;
+				game.player.battlefield.random();
+
+				// One of the interested players have joined the game, so the game is over other interested players.
+				game.listenTo( server, 'interestedPlayerAccepted', () => game._finishGame( 'started' ) );
+
+				game._listenToTheServerEvents();
+
+				return game;
+			} );
+	}
+
+	/**
+	 * Renders game view to the given element.
+	 *
+	 * @param {HTMLElement} element
+	 * @returns {Game}
+	 */
+	renderGameToElement( element ) {
+		element.appendChild( this.view.render() );
+
+		return this;
+	}
+
+	/**
 	 * Starts listen on errors from socket server.
 	 *
 	 * @returns {Promise<null, error>} Promise that returns error on reject.
@@ -154,15 +230,15 @@ export default class Game {
 			throw new Error( 'You need to join the game first.' );
 		}
 
-		const ships = this.player.battlefield.shipsCollection.toJSON();
+		const shipsCollection = this.player.battlefield.shipsCollection;
 
-		if ( !this.player.battlefield.validateShips( ships ) ) {
+		if ( !this.player.battlefield.validateShips( Array.from( shipsCollection ) ) ) {
 			throw new Error( 'Invalid ships configuration.' );
 		}
 
 		this.player.isReady = true;
 
-		this._server.request( 'ready', ships ).catch( ( error ) => this._finishGame( error ) );
+		this._server.request( 'ready', shipsCollection.toJSON() ).catch( error => this._finishGame( error ) );
 	}
 
 	/**
@@ -196,23 +272,15 @@ export default class Game {
 	}
 
 	/**
-	 * Lets know other players in the game that you wan't a rematch.
+	 * Lets know other players in the game that you want a rematch.
 	 */
 	requestRematch() {
+		if ( this.status != 'over' ) {
+			throw new Error( 'Invalid game status.' );
+		}
+
 		this._server.request( 'requestRematch' );
 		this.player.isWaitingForRematch = true;
-	}
-
-	/**
-	 * Renders game view to the given element.
-	 *
-	 * @param {HTMLElement} element
-	 * @returns {Game}
-	 */
-	renderGameToElement( element ) {
-		element.appendChild( this.view.render() );
-
-		return this;
 	}
 
 	/**
@@ -236,6 +304,7 @@ export default class Game {
 		// Player left the game before battle started.
 		this.listenTo( this._server, 'playerLeft', ( event, data ) => {
 			if ( data.opponentId == this.opponent.id ) {
+				this.opponent.id = null;
 				this.opponent.isReady = false;
 				this.opponent.isInGame = false;
 				this.status = 'available';
@@ -267,17 +336,17 @@ export default class Game {
 			}
 		} );
 
-		// Game is over, one of the players left the game after the battle was started.
-		this.listenTo( this._server, 'gameOver', ( evt, data ) => {
-			this._finishGame( data );
-		} );
-
 		// Both players requested rematch.
 		this.listenTo( this._server, 'rematch', () => {
 			this.status = 'full';
 			this.opponent.reset();
 			this.player.reset();
 			this.player.battlefield.random();
+		} );
+
+		// Game is over, one of the players left the game after the battle was started.
+		this.listenTo( this._server, 'gameOver', ( evt, data ) => {
+			this._finishGame( data );
 		} );
 	}
 
@@ -290,70 +359,6 @@ export default class Game {
 	_finishGame( errorName ) {
 		this._serverErrorName = errorName;
 		this.destroy();
-	}
-
-	/**
-	 * Creates the game.
-	 *
-	 * @static
-	 * @param {Number} size Size of the battlefield. How many fields width and height will be battlefield.
-	 * @param {Object} shipsSchema Defines how mety ships of specified types will be allowed in the game.
-	 * @returns {Promise} Promise that returns game instance when is resolved.
-	 */
-	static create( size, shipsSchema ) {
-		return new Promise( ( resolve ) => {
-			const server = new Server();
-			const game = new Game( server, size, shipsSchema );
-
-			game.player.isInGame = true;
-			game.player.isHost = true;
-			game.player.battlefield.random();
-
-			// One of interested players have joined the game.
-			game.listenTo( server, 'interestedPlayerAccepted', ( evt, data ) => {
-				game.opponent.id = data.id;
-				game.opponent.isInGame = true;
-				game.status = 'full';
-			} );
-
-			game._listenToTheServerEvents();
-
-			server.create( game.settings ).then( ( data ) => {
-				game.gameId = data.gameId;
-				game.player.id = data.playerId;
-			} );
-
-			resolve( game );
-		} );
-	}
-
-	/**
-	 * Joins the game of given id.
-	 *
-	 * @static
-	 * @param {String} gameId Id of game you want to join.
-	 * @returns {Promise} Promise that returns game instance when is resolved and errorName when is rejected.
-	 */
-	static join( gameId ) {
-		const server = new Server();
-
-		return server.join( gameId )
-			.then( ( data ) => {
-				const game = new Game( server, data.settings.size, data.settings.shipsSchema );
-
-				game.player.id = data.playerId;
-				game.opponent.id = data.opponentId;
-				game.opponent.isReady = data.isOpponentReady;
-				game.interestedPlayersNumber = data.interestedPlayersNumber;
-				game.player.battlefield.random();
-
-				// One of the interested players have joined the game, so the game is over other interested players.
-				game.listenTo( server, 'interestedPlayerAccepted', () => this._finishGame( 'started' ) );
-
-				game._listenToTheServerEvents();
-
-				return game;
-			} );
 	}
 }
 

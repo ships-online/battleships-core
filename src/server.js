@@ -89,6 +89,7 @@ export default class Server {
 					resolve( data.response );
 				}
 			} );
+
 			this._socket.emit( eventName, ...args  );
 		} );
 	}

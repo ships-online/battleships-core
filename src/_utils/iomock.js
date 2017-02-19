@@ -3,7 +3,7 @@ class SocketMock {
 		/**
 		 * Stores events with callbacks.
 		 *
-		 * @private
+		 * @protected
 		 * @type {Object}
 		 */
 		this._events = {};
@@ -71,5 +71,6 @@ const socket = new SocketMock();
 export const socketMock = socket;
 
 export function ioMock() {
+	socket._events = {};
 	return socket;
 }
