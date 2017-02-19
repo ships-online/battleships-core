@@ -19,10 +19,10 @@
   "devDependencies": {
     "gulp": "^3.9.1",
     "guppy-pre-commit": "^0.4.0",
-    "battleships-dev-tools": "git@github.com:ships-online/battleships-dev-tools.git",
+    "battleships-dev-tools": "git@github.com:ships-online/battleships-dev-tools.git"
   },
   "dependencies": {
-    "@ckeditor/ckeditor5-utils": "^0.6.0",
+    "@ckeditor/ckeditor5-utils": "^0.7.0",
     "battleships-engine": "git@github.com:ships-online/battleships-engine.git",
     "battleships-ui-vanilla": "git@github.com:ships-online/battleships-ui-vanilla.git"
   }
