@@ -4,7 +4,7 @@
   "description": "The core of Battleships game.",
   "scripts": {
     "lint": "./node_modules/.bin/gulp lint",
-    "test": "./node_modules/.bin/gulp test"
+    "test": "./node_modules/.bin/gulp test -c"
   },
   "keywords": [
     "battleships",
