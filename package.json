@@ -10,16 +10,20 @@
     "battleships",
     "game"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ships-online/battleships-core.git"
+  },
   "author": "Oskar Wróbel <kontakt@oskarwrobel.pl>",
   "license": "ISC",
   "devDependencies": {
     "gulp": "^3.9.1",
     "guppy-pre-commit": "^0.4.0",
-    "battleships-dev-tools": "../battleships-dev-tools"
+    "battleships-dev-tools": "git@github.com:ships-online/battleships-dev-tools.git",
   },
   "dependencies": {
     "@ckeditor/ckeditor5-utils": "^0.6.0",
-    "battleships-engine": "../battleships-engine",
-    "battleships-ui-vanilla": "../battleships-ui-vanilla"
+    "battleships-engine": "git@github.com:ships-online/battleships-engine.git",
+    "battleships-ui-vanilla": "git@github.com:ships-online/battleships-ui-vanilla.git"
   }
 }
