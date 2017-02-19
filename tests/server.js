@@ -175,6 +175,22 @@ describe( 'Server', () => {
 			socketMock.emit( 'doSomethingResponse', { response: responseData } );
 		} );
 
+		it( 'should return promise and resolve when there is no response data', ( done ) => {
+			const requestData = { foo: 'bar' };
+
+			server.request( 'doSomething', requestData ).then( ( response ) => {
+				expect( emitSpy.calledTwice ).to.true;
+
+				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
+				expect( emitSpy.firstCall.args[ 1 ] ).to.equal( requestData );
+
+				expect( response ).to.undefined;
+				done();
+			} );
+
+			socketMock.emit( 'doSomethingResponse' );
+		} );
+
 		it( 'should emit event to the server, return promise and reject with error', ( done ) => {
 			const requestData = { foo: 'bar' };
 			const error = 'error';

@@ -464,9 +464,7 @@ describe( 'Game', () => {
 
 			game.accept();
 
-			socketMock.emit( 'acceptResponse', {
-				response: {}
-			} );
+			socketMock.emit( 'acceptResponse' );
 
 			setTimeout( () => {
 				expect( game.player.isInGame ).to.true;
