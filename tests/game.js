@@ -225,7 +225,7 @@ describe( 'Game', () => {
 
 			setTimeout( () => {
 				socketMock.emit( 'interestedPlayerAccepted' );
-			}, 0 );
+			}, 10 );
 		} );
 	} );
 
