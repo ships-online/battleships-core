@@ -1,112 +1,76 @@
-import { ioMock, socketMock } from 'src/_utils/iomock.js';
+class SocketMock {
+	constructor() {
+		/**
+		 * Stores events with callbacks.
+		 *
+		 * @protected
+		 * @type {Object}
+		 */
+		this._events = {};
+	}
 
-describe( '_utils', () => {
-	describe( 'IoMock', () => {
-		it( 'should return the same socket instance', () => {
-			expect( ioMock() ).to.equal( socketMock );
-		} );
+	/**
+	 * Registers a callback function to be executed when an event is emitted.
+	 *
+	 * @param {String} event The name of the event.
+	 * @param {Function} callback The function to be called on event.
+	 */
+	on( event, callback ) {
+		if ( !Array.isArray( this._events[ event ] ) ) {
+			this._events[ event ] = [];
+		}
 
-		describe( 'on()', () => {
-			it( 'should store event with a callback', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
+		this._events[ event ].push( callback );
+	}
 
-				socketMock.on( expectedEvent, expectedCallback );
+	/**
+	 * For API compatibility.
+	 *
+	 * @param args
+	 */
+	once( ...args ) {
+		this.on( ...args );
+	}
 
-				expect( socketMock._events[ expectedEvent ] ).to.include( expectedCallback );
-			} );
+	/**
+	 * Stops executing the callback on the given event.
+	 *
+	 * @param {String} event The name of the event.
+	 * @param {Function} callback The function to stop being called.
+	 */
+	off( event, callback ) {
+		if ( typeof this._events[ event ] === 'object' ) {
+			const index = this._events[ event ].indexOf( callback );
 
-			it( 'should store multiple events with multiple callbacks', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
-				const otherExpectedEvent = 'otherEvent';
-				const otherExpectedCallback = sinon.spy();
+			if ( index > -1 ) {
+				this._events[ event ].splice( index, 1 );
+			}
+		}
+	}
 
-				socketMock.on( expectedEvent, expectedCallback );
-				socketMock.on( expectedEvent, otherExpectedCallback );
-				socketMock.on( otherExpectedEvent, expectedCallback );
-				socketMock.on( otherExpectedEvent, otherExpectedCallback );
+	/**
+	 * Fires an event, executing all callbacks registered for it.
+	 *
+	 * @param {String} event The name of the event.
+	 * @param {...*} [args] Additional arguments to be passed to the callbacks.
+	 */
+	emit( event, ...args ) {
+		if ( typeof this._events[ event ] === 'object' ) {
+			const callbacks = this._events[ event ].slice();
+			const length = callbacks.length;
 
-				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ expectedCallback, otherExpectedCallback ] );
-				expect( socketMock._events[ otherExpectedEvent ] ).to.include.members( [ expectedCallback, otherExpectedCallback ] );
-			} );
-		} );
+			for ( let i = 0; i < length; i++ ) {
+				callbacks[ i ].call( this, ...args );
+			}
+		}
+	}
+}
 
-		describe( 'off()', () => {
-			it( 'should remove callback from event', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
-				const otherExpectedCallback = sinon.spy();
+const socket = new SocketMock();
 
-				socketMock._events = {
-					[expectedEvent]: [ expectedCallback, otherExpectedCallback ]
-				};
+export const socketMock = socket;
 
-				socketMock.off( expectedEvent, expectedCallback );
-
-				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ otherExpectedCallback ] );
-			} );
-
-			it( 'should do nothing if callback is not attached to event', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
-				const fakeCallback = sinon.spy();
-
-				socketMock._events = {
-					[expectedEvent]: [ expectedCallback ]
-				};
-
-				socketMock.off( expectedEvent, fakeCallback );
-
-				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ expectedCallback ] );
-			} );
-
-			it( 'should do nothing if event does not exist', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
-				const fakeEvent = 'fakeEvent';
-
-				socketMock._events = {
-					[expectedEvent]: [ expectedCallback ]
-				};
-
-				socketMock.off( fakeEvent, expectedCallback );
-
-				expect( socketMock._events[ expectedEvent ] ).to.include.members( [ expectedCallback ] );
-			} );
-		} );
-
-		describe( 'emit()', () => {
-			it( 'should fire all callback attached to event', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
-				const otherExpectedCallback = sinon.spy();
-				const unexpectedCallback = sinon.spy();
-
-				socketMock._events = {
-					[expectedEvent]: [ expectedCallback, otherExpectedCallback ],
-					'otherEvent': [ unexpectedCallback ]
-				};
-
-				socketMock.emit( expectedEvent );
-
-				expect( expectedCallback ).to.be.called;
-				expect( otherExpectedCallback ).to.be.called;
-				expect( unexpectedCallback ).to.be.not.called;
-			} );
-
-			it( 'should pass additional parameters to the callback', () => {
-				const expectedEvent = 'someEvent';
-				const expectedCallback = sinon.spy();
-
-				socketMock._events = {
-					[expectedEvent]: [ expectedCallback ]
-				};
-
-				socketMock.emit( expectedEvent, 'param1', 'param2' );
-
-				sinon.assert.calledWithExactly( expectedCallback, 'param1', 'param2' );
-			} );
-		} );
-	} );
-} );
+export function ioMock() {
+	socket._events = {};
+	return socket;
+}

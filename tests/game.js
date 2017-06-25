@@ -1,8 +1,8 @@
-import Game from 'src/game.js';
-import Player from 'src/player.js';
-import Server from 'src/server.js';
-import GameView from 'battleships-ui-vanilla/src/gameview.js';
-import { ioMock, socketMock } from 'src/_utils/iomock.js';
+import Game from '../src/game';
+import Player from '../src/player';
+import Server from '../src/server';
+import GameView from 'battleships-ui-vanilla/src/gameview';
+import { ioMock, socketMock } from './_utils/iomock';
 
 describe( 'Game', () => {
 	let server, game;

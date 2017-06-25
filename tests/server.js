@@ -1,5 +1,5 @@
-import Server from 'src/server.js';
-import { ioMock, socketMock } from 'src/_utils/iomock.js';
+import Server from '../src/server';
+import { ioMock, socketMock } from './_utils/iomock';
 
 describe( 'Server', () => {
 	let server, emitSpy;
