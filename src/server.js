@@ -3,6 +3,8 @@ import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
 /* global io */
 
+const _socket = Symbol( 'socket' );
+
 /**
  * This events will be delegates to server class from the socket instance.
  */
@@ -31,7 +33,7 @@ export default class Server {
 		 * @private
 		 * @type {socket}
 		 */
-		this._socket = null;
+		this[ _socket ] = null;
 	}
 
 	/**
@@ -66,12 +68,12 @@ export default class Server {
 	 */
 	_connect( action, data ) {
 		return new Promise( ( resolve, reject ) => {
-			this._socket = io( window.location.hostname + ':8080' );
+			this[ _socket ] = io( window.location.hostname + ':8080' );
 
 			this.request( action, data )
 				.then( ( response ) => {
 					eventsToDelegate.forEach( ( name ) => {
-						this._socket.on( name, data => this.fire( name, data ) );
+						this[ _socket ].on( name, data => this.fire( name, data ) );
 					} );
 
 					resolve( response );
@@ -89,7 +91,7 @@ export default class Server {
 	 */
 	request( eventName, ...args ) {
 		return new Promise( ( resolve, reject ) => {
-			this._socket.once( `${ eventName }Response`, ( data = {} ) => {
+			this[ _socket ].once( `${ eventName }Response`, ( data = {} ) => {
 				if ( data.error ) {
 					reject( data.error );
 				} else {
@@ -97,7 +99,7 @@ export default class Server {
 				}
 			} );
 
-			this._socket.emit( eventName, ...args  );
+			this[ _socket ].emit( eventName, ...args  );
 		} );
 	}
 }

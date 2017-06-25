@@ -7,6 +7,8 @@ import GameView from 'battleships-ui-vanilla/src/gameview.js';
 import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
 import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
+const _server = Symbol( 'server' );
+
 /**
  * @mixes ObservableMixin
  */
@@ -92,7 +94,7 @@ export default class Game {
 		 * @private
 		 * @type {Server}
 		 */
-		this._server = server;
+		this[ _server ] = server;
 	}
 
 	/**
@@ -212,7 +214,7 @@ export default class Game {
 			throw new Error( 'Not available.' );
 		}
 
-		this._server.request( 'accept' )
+		this[ _server ].request( 'accept' )
 			.then( () => {
 				this.player.isInGame = true;
 				this.status = 'full';
@@ -234,13 +236,13 @@ export default class Game {
 
 		const shipsCollection = this.player.battlefield.shipsCollection;
 
-		if ( !this.player.battlefield.validateShips( Array.from( shipsCollection ) ) ) {
+		if ( this.player.battlefield.isCollision ) {
 			throw new Error( 'Invalid ships configuration.' );
 		}
 
 		this.player.isReady = true;
 
-		this._server.request( 'ready', shipsCollection.toJSON() ).catch( error => this._finishGame( error ) );
+		this[ _server ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._finishGame( error ) );
 	}
 
 	/**
@@ -257,7 +259,7 @@ export default class Game {
 			throw new Error( 'Not your turn.' );
 		}
 
-		this._server.request( 'shoot', position ).then( ( data ) => {
+		this[ _server ].request( 'shoot', position ).then( ( data ) => {
 			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
@@ -281,7 +283,7 @@ export default class Game {
 			throw new Error( 'Invalid game status.' );
 		}
 
-		this._server.request( 'requestRematch' );
+		this[ _server ].request( 'requestRematch' );
 		this.player.isWaitingForRematch = true;
 	}
 
@@ -299,12 +301,12 @@ export default class Game {
 	 */
 	_listenToTheServerEvents() {
 		// Player enter on the game URL but not accept the game yet.
-		this.listenTo( this._server, 'interestedPlayerJoined', ( evt, data ) => {
+		this.listenTo( this[ _server ], 'interestedPlayerJoined', ( evt, data ) => {
 			this.interestedPlayersNumber = data.interestedPlayersNumber;
 		} );
 
 		// Player left the game before battle start.
-		this.listenTo( this._server, 'playerLeft', ( event, data ) => {
+		this.listenTo( this[ _server ], 'playerLeft', ( event, data ) => {
 			if ( data.opponentId == this.opponent.id ) {
 				this.opponent.id = null;
 				this.opponent.isReady = false;
@@ -316,18 +318,18 @@ export default class Game {
 		} );
 
 		// Player is ready for the battle.
-		this.listenTo( this._server, 'playerReady', () => {
+		this.listenTo( this[ _server ], 'playerReady', () => {
 			this.opponent.isReady = true;
 		} );
 
 		// The battle is started.
-		this.listenTo( this._server, 'battleStarted', ( evt, data ) => {
+		this.listenTo( this[ _server ], 'battleStarted', ( evt, data ) => {
 			this.activePlayer = data.activePlayer;
 			this.status = 'battle';
 		} );
 
 		// Player shoot.
-		this.listenTo( this._server, 'playerShoot', ( evt, data ) => {
+		this.listenTo( this[ _server ], 'playerShoot', ( evt, data ) => {
 			this.player.battlefield.markAs( data.position, data.type );
 
 			if ( data.winner ) {
@@ -339,7 +341,7 @@ export default class Game {
 		} );
 
 		// Both players requested rematch.
-		this.listenTo( this._server, 'rematch', () => {
+		this.listenTo( this[ _server ], 'rematch', () => {
 			this.status = 'full';
 			this.opponent.reset();
 			this.player.reset();
@@ -347,7 +349,7 @@ export default class Game {
 		} );
 
 		// Game is over, one of the players left the game after the battle was started.
-		this.listenTo( this._server, 'gameOver', ( evt, data ) => {
+		this.listenTo( this[ _server ], 'gameOver', ( evt, data ) => {
 			this._finishGame( data );
 		} );
 	}

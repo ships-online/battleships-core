@@ -61,7 +61,7 @@ export default class Player {
 	}
 
 	/**
-	 * Resets player data to values before the battle.
+	 * Resets player data to default values.
 	 */
 	reset() {
 		this.battlefield.reset();

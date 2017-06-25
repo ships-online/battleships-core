@@ -5,15 +5,17 @@ import GameView from 'battleships-ui-vanilla/src/gameview';
 import { ioMock, socketMock } from './_utils/iomock';
 
 describe( 'Game', () => {
-	let server, game;
+	let server, game, sandbox;
 
 	beforeEach( () => {
+		sandbox = sinon.sandbox.create();
 		window.io = ioMock;
 		server = new Server();
 		game = new Game( server, 5, { 1: 2 } );
 	} );
 
 	afterEach( () => {
+		sandbox.restore();
 		game.destroy();
 		delete window.io;
 	} );
@@ -149,14 +151,12 @@ describe( 'Game', () => {
 
 	describe( 'static join()', () => {
 		it( 'should emit socket event with game id', () => {
-			const emitSpy = sinon.spy( socketMock, 'emit' );
+			const emitSpy = sandbox.spy( socketMock, 'emit' );
 
 			Game.join( 'gameId' );
 
 			expect( emitSpy.calledOnce ).to.true;
 			expect( emitSpy.firstCall.calledWithExactly( 'join', 'gameId' ) ).to.true;
-
-			emitSpy.restore();
 		} );
 
 		it( 'should return promise which returns game instance on resolve', ( done ) => {
@@ -387,9 +387,9 @@ describe( 'Game', () => {
 
 		describe( 'rematch', () => {
 			it( 'should change game status, reset both players and randomize player battlefield', () => {
-				const playerResetSpy = sinon.spy( game.player, 'reset' );
-				const opponentResetSpy = sinon.spy( game.opponent, 'reset' );
-				const randomSpy = sinon.spy( game.player.battlefield, 'random' );
+				const playerResetSpy = sandbox.spy( game.player, 'reset' );
+				const opponentResetSpy = sandbox.spy( game.opponent, 'reset' );
+				const randomSpy = sandbox.spy( game.player.battlefield, 'random' );
 
 				socketMock.emit( 'rematch' );
 
@@ -535,7 +535,7 @@ describe( 'Game', () => {
 		} );
 
 		it( 'should send serialized ships to the server and mark player as ready', () => {
-			const emitSpy = sinon.spy( socketMock, 'emit' );
+			const emitSpy = sandbox.spy( socketMock, 'emit' );
 
 			game.player.isReady = false;
 			game.player.isInGame = true;
@@ -590,7 +590,7 @@ describe( 'Game', () => {
 		} );
 
 		it( 'should sent position to the server', () => {
-			const emitSpy = sinon.spy( socketMock, 'emit' );
+			const emitSpy = sandbox.spy( socketMock, 'emit' );
 
 			game.status = 'battle';
 			game.player.id = 'playerId';
@@ -598,9 +598,7 @@ describe( 'Game', () => {
 
 			game.shoot( [ 1, 1 ] );
 
-			expect( emitSpy.calledWithExactly( 'shoot', [ 1, 1 ] ) );
-
-			emitSpy.restore();
+			sinon.assert.calledWithExactly( emitSpy, 'shoot', [ 1, 1 ] );
 		} );
 
 		it( 'should mark field base on type returned by the server and set activePlayer', ( done ) => {
