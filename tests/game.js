@@ -194,7 +194,7 @@ describe( 'Game', () => {
 						interestedPlayersNumber: 10
 					}
 				} );
-			}, 0 );
+			}, 10 );
 		} );
 
 		it( 'should return promise which returns error on reject', ( done ) => {
@@ -231,8 +231,8 @@ describe( 'Game', () => {
 
 				setTimeout( () => {
 					socketMock.emit( 'interestedPlayerAccepted' );
-				}, 0 );
-			}, 0 );
+				}, 10 );
+			}, 10 );
 		} );
 	} );
 
