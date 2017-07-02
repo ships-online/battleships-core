@@ -50,6 +50,8 @@ export default class Game {
 		 */
 		this.set( 'status', 'available' );
 
+		this.set( 'winner', null );
+
 		/**
 		 * Id of active player.
 		 *
@@ -267,6 +269,7 @@ export default class Game {
 			}
 
 			if ( data.winner ) {
+				this.winner = data.winner.id;
 				this.status = 'over';
 				this.activePlayer = null;
 			} else {
@@ -335,6 +338,7 @@ export default class Game {
 			if ( data.winner ) {
 				this.status = 'over';
 				this.activePlayer = null;
+				this.winner = data.winner.id;
 			} else {
 				this.activePlayer = data.activePlayer;
 			}
@@ -346,6 +350,7 @@ export default class Game {
 			this.opponent.reset();
 			this.player.reset();
 			this.player.battlefield.random();
+			this.winner = null;
 		} );
 
 		// Game is over, one of the players left the game after the battle was started.

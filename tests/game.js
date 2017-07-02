@@ -27,6 +27,7 @@ describe( 'Game', () => {
 			expect( game ).to.have.property( 'interestedPlayersNumber', 0 );
 			expect( game ).to.have.property( 'status', 'available' );
 			expect( game ).to.have.property( 'activePlayer', null );
+			expect( game ).to.have.property( 'winner', null );
 			expect( game ).to.have.property( 'player' ).to.instanceof( Player );
 			expect( game ).to.have.property( 'opponent' ).to.instanceof( Player );
 			expect( game ).to.have.property( 'view' ).to.instanceof( GameView );
@@ -180,18 +181,20 @@ describe( 'Game', () => {
 				} )
 				.catch( done );
 
-			socketMock.emit( 'joinResponse', {
-				response: {
-					settings: {
-						size: 5,
-						shipsSchema: { 3: 3 }
-					},
-					playerId: 'playerId',
-					opponentId: 'opponentId',
-					isOpponentReady: true,
-					interestedPlayersNumber: 10
-				}
-			} );
+			setTimeout( () => {
+				socketMock.emit( 'joinResponse', {
+					response: {
+						settings: {
+							size: 5,
+							shipsSchema: { 3: 3 }
+						},
+						playerId: 'playerId',
+						opponentId: 'opponentId',
+						isOpponentReady: true,
+						interestedPlayersNumber: 10
+					}
+				} );
+			}, 0 );
 		} );
 
 		it( 'should return promise which returns error on reject', ( done ) => {
@@ -201,9 +204,11 @@ describe( 'Game', () => {
 					done();
 				} );
 
-			socketMock.emit( 'joinResponse', {
-				error: 'foo-bar'
-			} );
+			setTimeout( () => {
+				socketMock.emit( 'joinResponse', {
+					error: 'foo-bar'
+				} );
+			}, 10 );
 		} );
 
 		it( 'should over the game when other player accepts the game', ( done ) => {
@@ -214,18 +219,20 @@ describe( 'Game', () => {
 					done();
 				} );
 
-			socketMock.emit( 'joinResponse', {
-				response: {
-					settings: {
-						size: 5,
-						shipsSchema: { 3: 3 }
-					},
-				}
-			} );
-
 			setTimeout( () => {
-				socketMock.emit( 'interestedPlayerAccepted' );
-			}, 10 );
+				socketMock.emit( 'joinResponse', {
+					response: {
+						settings: {
+							size: 5,
+							shipsSchema: { 3: 3 }
+						}
+					}
+				} );
+
+				setTimeout( () => {
+					socketMock.emit( 'interestedPlayerAccepted' );
+				}, 0 );
+			}, 0 );
 		} );
 	} );
 
@@ -391,12 +398,15 @@ describe( 'Game', () => {
 				const opponentResetSpy = sandbox.spy( game.opponent, 'reset' );
 				const randomSpy = sandbox.spy( game.player.battlefield, 'random' );
 
+				game.winner = 'someId';
+
 				socketMock.emit( 'rematch' );
 
 				expect( playerResetSpy.calledOnce ).to.true;
 				expect( opponentResetSpy.calledOnce ).to.true;
 				expect( randomSpy.calledOnce ).to.true;
 				expect( game.status ).to.equal( 'full' );
+				expect( game.winner ).to.equal( null );
 			} );
 		} );
 
@@ -654,7 +664,7 @@ describe( 'Game', () => {
 			}, 0 );
 		} );
 
-		it( 'should over the game when player has won', ( done ) => {
+		it( 'should over the game when player won', ( done ) => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
 			game.activePlayer = 'playerId';
@@ -673,6 +683,7 @@ describe( 'Game', () => {
 
 			setTimeout( () => {
 				expect( game.status ).to.equal( 'over' );
+				expect( game.winner ).to.equal( 'playerId' );
 				expect( game.activePlayer ).to.null;
 				done();
 			}, 0 );
