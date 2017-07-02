@@ -348,47 +348,7 @@ describe( 'Game', () => {
 
 				expect( game.activePlayer ).to.null;
 				expect( game.status ).to.equal( 'over' );
-			} );
-		} );
-
-		describe( 'playerShoot', () => {
-			it( 'should mark given field as hit', () => {
-				socketMock.emit( 'playerShoot', {
-					position: [ 2, 2 ],
-					type: 'hit'
-				} );
-
-				expect( game.player.battlefield.getField( [ 2, 2 ] ).isHit ).to.true;
-			} );
-
-			it( 'should mark given field as missed', () => {
-				socketMock.emit( 'playerShoot', {
-					position: [ 2, 2 ],
-					type: 'missed'
-				} );
-
-				expect( game.player.battlefield.getField( [ 2, 2 ] ).isMissed ).to.true;
-			} );
-
-			it( 'should set active player', () => {
-				socketMock.emit( 'playerShoot', {
-					position: [ 2, 2 ],
-					type: 'missed',
-					activePlayer: 'someId'
-				} );
-
-				expect( game.activePlayer ).to.equal( 'someId' );
-			} );
-
-			it( 'should over the game when one of the player has won', () => {
-				socketMock.emit( 'playerShoot', {
-					position: [ 2, 2 ],
-					type: 'hit',
-					winner: 'someId'
-				} );
-
-				expect( game.activePlayer ).to.null;
-				expect( game.status ).to.equal( 'over' );
+				expect( game.winner ).to.equal( 'someId' );
 			} );
 		} );
 
@@ -675,9 +635,7 @@ describe( 'Game', () => {
 				response: {
 					position: [ 1, 1 ],
 					type: 'hit',
-					winner: {
-						id: 'playerId'
-					}
+					winner: 'playerId'
 				}
 			} );
 

@@ -269,7 +269,7 @@ export default class Game {
 			}
 
 			if ( data.winner ) {
-				this.winner = data.winner.id;
+				this.winner = data.winner;
 				this.status = 'over';
 				this.activePlayer = null;
 			} else {
@@ -338,7 +338,7 @@ export default class Game {
 			if ( data.winner ) {
 				this.status = 'over';
 				this.activePlayer = null;
-				this.winner = data.winner.id;
+				this.winner = data.winner;
 			} else {
 				this.activePlayer = data.activePlayer;
 			}
