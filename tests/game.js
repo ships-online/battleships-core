@@ -352,6 +352,29 @@ describe( 'Game', () => {
 			} );
 		} );
 
+		describe( 'playerRequestRematch', () => {
+			beforeEach( () => {
+				game.player.id = 'someId';
+				game.opponent.id = 'otherId';
+			} );
+
+			it( 'should set player as waiting for the rematch', () => {
+				socketMock.emit( 'playerRequestRematch', {
+					playerId: 'someId'
+				} );
+
+				expect( game.player.isWaitingForRematch ).to.true;
+			} );
+
+			it( 'should set opponent as waiting for the rematch', () => {
+				socketMock.emit( 'playerRequestRematch', {
+					playerId: 'otherId'
+				} );
+
+				expect( game.opponent.isWaitingForRematch ).to.true;
+			} );
+		} );
+
 		describe( 'rematch', () => {
 			it( 'should change game status, reset both players and randomize player battlefield', () => {
 				const playerResetSpy = sandbox.spy( game.player, 'reset' );

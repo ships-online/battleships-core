@@ -344,6 +344,15 @@ export default class Game {
 			}
 		} );
 
+		// One of the players requested rematch.
+		this.listenTo( this[ _server ], 'playerRequestRematch', ( evt, data ) => {
+			if ( this.player.id == data.playerId ) {
+				this.player.isWaitingForRematch = true;
+			} else {
+				this.opponent.isWaitingForRematch = true;
+			}
+		} );
+
 		// Both players requested rematch.
 		this.listenTo( this[ _server ], 'rematch', () => {
 			this.status = 'full';
