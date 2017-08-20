@@ -378,6 +378,7 @@ export default class Game {
 		this._serverErrorName = errorName;
 		this.destroy();
 		this[ _server ].destroy();
+		this.view.destroy();
 	}
 }
 
