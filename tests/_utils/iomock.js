@@ -64,6 +64,11 @@ class SocketMock {
 			}
 		}
 	}
+
+	/**
+	 * To align interface.
+	 */
+	disconnect() {}
 }
 
 const socket = new SocketMock();
