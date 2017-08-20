@@ -1,7 +1,7 @@
 import EmitterMixin from '@ckeditor/ckeditor5-utils/src/emittermixin.js';
 import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 
-/* global io */
+/* global io, SOCKET_URL */
 
 const _socket = Symbol( 'socket' );
 
@@ -68,7 +68,7 @@ export default class Server {
 	 */
 	_connect( action, data ) {
 		return new Promise( ( resolve, reject ) => {
-			this[ _socket ] = io( window.location.hostname + ':8080' );
+			this[ _socket ] = io( SOCKET_URL );
 
 			this.request( action, data )
 				.then( ( response ) => {
