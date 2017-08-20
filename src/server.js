@@ -102,6 +102,11 @@ export default class Server {
 			this[ _socket ].emit( eventName, ...args  );
 		} );
 	}
+
+	destroy() {
+		this.stopListening();
+		this[ _socket ].disconnect();
+	}
 }
 
 mix( Server, EmitterMixin );

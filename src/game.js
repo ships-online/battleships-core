@@ -377,6 +377,7 @@ export default class Game {
 	_finishGame( errorName ) {
 		this._serverErrorName = errorName;
 		this.destroy();
+		this[ _server ].destroy();
 	}
 }
 
