@@ -9,8 +9,9 @@ import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
 export default class Player {
 	/**
 	 * @param {Battlefield} battlefield Battlefield instance.
+	 * @param {Boolean} isHost Defines whether player is a host or guest.
 	 */
-	constructor( battlefield ) {
+	constructor( battlefield, isHost ) {
 		/**
 		 * Player id.
 		 *
@@ -30,7 +31,7 @@ export default class Player {
 		 *
 		 * @type {Boolean}
 		 */
-		this.isHost = false;
+		this.isHost = isHost;
 
 		/**
 		 * Defines if player is in game (player can enter on game page but not join to the game).

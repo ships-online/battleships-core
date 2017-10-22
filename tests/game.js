@@ -11,7 +11,7 @@ describe( 'Game', () => {
 		sandbox = sinon.sandbox.create();
 		window.io = ioMock;
 		server = new Server();
-		game = new Game( server, 5, { 1: 2 } );
+		game = new Game( server, false, 5, { 1: 2 } );
 	} );
 
 	afterEach( () => {
@@ -32,10 +32,12 @@ describe( 'Game', () => {
 			expect( game ).to.have.property( 'opponent' ).to.instanceof( Player );
 			expect( game ).to.have.property( 'view' ).to.instanceof( GameView );
 
+			expect( game.player ).to.have.property( 'isHost', false );
 			expect( game.player.battlefield ).to.have.property( 'size', 5 );
 			expect( game.player.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( { 1: 2 } );
 			expect( game.player.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 2 );
 
+			expect( game.opponent ).to.have.property( 'isHost', true );
 			expect( game.opponent.battlefield ).to.have.property( 'size', 5 );
 			expect( game.opponent.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( { 1: 2 } );
 			expect( game.opponent.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 0 );
@@ -51,10 +53,12 @@ describe( 'Game', () => {
 				shipsSchema: schema
 			} );
 
+			expect( game.player ).to.have.property( 'isHost', true );
 			expect( game.player.battlefield ).to.have.property( 'size', 10 );
 			expect( game.player.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( schema );
 			expect( game.player.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 10 );
 
+			expect( game.opponent ).to.have.property( 'isHost', false );
 			expect( game.opponent.battlefield ).to.have.property( 'size', 10 );
 			expect( game.opponent.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( schema );
 			expect( game.opponent.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 0 );
@@ -85,9 +89,7 @@ describe( 'Game', () => {
 		let game;
 
 		beforeEach( () => {
-			return Game.create().then( ( gameInstance ) => {
-				game = gameInstance;
-			} );
+			return Game.create().then( gameInstance => ( game = gameInstance ) );
 		} );
 
 		it( 'should return promise which returns game instance on resolve', () => {
@@ -403,18 +405,6 @@ describe( 'Game', () => {
 				setTimeout( () => {
 					socketMock.emit( 'gameOver', 'foo-bar' );
 				}, 0 );
-			} );
-		} );
-	} );
-
-	describe( 'renderGameToElement()', () => {
-		it( 'should render game into given element', () => {
-			return Game.create().then( ( game ) => {
-				const element = document.createElement( 'div' );
-
-				game.renderGameToElement( element );
-
-				expect( element.childElementCount ).to.equal( 1 );
 			} );
 		} );
 	} );

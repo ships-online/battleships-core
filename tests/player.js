@@ -6,20 +6,20 @@ describe( 'Player', () => {
 
 	beforeEach( () => {
 		battlefield = new Battlefield( 10 );
-		player = new Player( battlefield );
+		player = new Player( battlefield, true );
 	} );
 
 	describe( 'constructor()', () => {
 		it( 'should create class instance', () => {
 			expect( player ).to.have.property( 'id', null );
 			expect( player ).to.have.property( 'battlefield', battlefield );
-			expect( player ).to.have.property( 'isHost', false );
+			expect( player ).to.have.property( 'isHost', true );
 			expect( player ).to.have.property( 'isInGame', false );
 			expect( player ).to.have.property( 'isReady', false );
 			expect( player ).to.have.property( 'isWaitingForRematch', false );
 		} );
 
-		it( 'should bind battlefield#locked to player#isReady', () => {
+		it( 'should bind battlefield#isLocked to player#isReady', () => {
 			expect( battlefield.isLocked ).to.false;
 
 			player.isReady = true;
@@ -29,6 +29,13 @@ describe( 'Player', () => {
 			player.isReady = false;
 
 			expect( battlefield.isLocked ).to.false;
+		} );
+
+		it( 'should create non-host player', () => {
+			battlefield = new Battlefield( 10 );
+			player = new Player( battlefield, false );
+
+			expect( player ).to.have.property( 'isHost', false );
 		} );
 	} );
 

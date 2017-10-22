@@ -15,19 +15,21 @@ const _server = Symbol( 'server' );
 export default class Game {
 	/**
 	 * @param {Server} server Server instance.
+	 * @param {Boolean} [isHost=true] When `true` then game is created by a host (#player is marker as host).
 	 * @param {Number} [size=10] Size of the battlefield.
-	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specified length will be in the game.
+	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specific length will be in the game.
 	 */
-	constructor( server, size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
+	constructor( server, isHost = true, size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
 		/**
 		 * Game settings.
+		 *
 		 *
 		 * @type {Object}
 		 */
 		this.settings = { size, shipsSchema };
 
 		/**
-		 * Game id.
+		 * Game id, used e.g. to create share url.
 		 *
 		 * @observable
 		 * @type {String}
@@ -50,6 +52,12 @@ export default class Game {
 		 */
 		this.set( 'status', 'available' );
 
+		/**
+		 * Id of winner player. Is set only when `#status` is `over`.
+		 *
+		 * @observable
+		 * @type {null|String}
+		 */
 		this.set( 'winner', null );
 
 		/**
@@ -74,14 +82,14 @@ export default class Game {
 		 *
 		 * @type {Player}
 		 */
-		this.player = new Player( PlayerBattlefield.createWithShips( size, shipsSchema ) );
+		this.player = new Player( PlayerBattlefield.createWithShips( size, shipsSchema ), isHost );
 
 		/**
 		 * Opponent.
 		 *
 		 * @type {Player}
 		 */
-		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ) );
+		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ), !isHost );
 
 		/**
 		 * Game view.
@@ -91,7 +99,7 @@ export default class Game {
 		this.view = new GameView( this );
 
 		/**
-		 * Server instance.
+		 * Server instance. Provides Client <-> Server communication.
 		 *
 		 * @private
 		 * @type {Server}
@@ -114,42 +122,41 @@ export default class Game {
 	 * @returns {String}
 	 */
 	get inviteUrl() {
-		return `${ document.URL }#${ this.gameId }`;
+		const location = window.location;
+
+		return `${ location.protocol }//${ location.host }${ location.pathname }#${ this.gameId }`;
 	}
 
 	/**
 	 * Creates the game.
 	 *
 	 * @static
-	 * @param {Number} size Size of the battlefield. How many fields width and height will be battlefield.
-	 * @param {Object} shipsSchema Defines how mety ships of specified types will be allowed in the game.
+	 * @param {Number} [size] Size of the battlefield. How many fields width and height will be battlefield.
+	 * @param {Object} [shipsSchema] Defines how many ships of specified types will be allowed in the game.
 	 * @returns {Promise} Promise that returns game instance when is resolved.
 	 */
 	static create( size, shipsSchema ) {
-		return new Promise( ( resolve ) => {
-			const server = new Server();
-			const game = new Game( server, size, shipsSchema );
+		const server = new Server();
+		const game = new Game( server, true, size, shipsSchema );
 
-			game.player.isInGame = true;
-			game.player.isHost = true;
-			game.player.battlefield.random();
+		game.player.isInGame = true;
+		game.player.battlefield.random();
 
-			game._listenToTheServerEvents();
+		game._listenToTheServerEvents();
 
-			// One of interested players have joined the game.
-			game.listenTo( server, 'interestedPlayerAccepted', ( evt, data ) => {
-				game.opponent.id = data.id;
-				game.opponent.isInGame = true;
-				game.status = 'full';
-			} );
-
-			server.create( game.settings ).then( ( data ) => {
-				game.gameId = data.gameId;
-				game.player.id = data.playerId;
-			} );
-
-			resolve( game );
+		// One of interested players have joined the game.
+		game.listenTo( game[ _server ], 'interestedPlayerAccepted', ( evt, data ) => {
+			game.opponent.id = data.id;
+			game.opponent.isInGame = true;
+			game.status = 'full';
 		} );
+
+		server.create( game.settings ).then( ( data ) => {
+			game.gameId = data.gameId;
+			game.player.id = data.playerId;
+		} );
+
+		return Promise.resolve( game );
 	}
 
 	/**
@@ -164,7 +171,7 @@ export default class Game {
 
 		return server.join( gameId )
 			.then( ( data ) => {
-				const game = new Game( server, data.settings.size, data.settings.shipsSchema );
+				const game = new Game( server, false, data.settings.size, data.settings.shipsSchema );
 
 				game.player.id = data.playerId;
 				game.opponent.id = data.opponentId;
@@ -179,18 +186,6 @@ export default class Game {
 
 				return game;
 			} );
-	}
-
-	/**
-	 * Renders game view to the given element.
-	 *
-	 * @param {HTMLElement} element
-	 * @returns {Game}
-	 */
-	renderGameToElement( element ) {
-		element.appendChild( this.view.render() );
-
-		return this;
 	}
 
 	/**
