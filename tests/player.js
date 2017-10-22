@@ -1,5 +1,5 @@
-import Player from '../src/player.js';
-import Battlefield from 'battleships-engine/src/battlefield.js';
+import Player from '../src/player';
+import Battlefield from 'battleships-engine/src/battlefield';
 
 describe( 'Player', () => {
 	let player, battlefield;

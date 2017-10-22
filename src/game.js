@@ -1,11 +1,11 @@
-import Server from './server.js';
-import Player from './player.js';
-import PlayerBattlefield from 'battleships-engine/src/playerbattlefield.js';
-import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield.js';
-import Ship from 'battleships-engine/src/ship.js';
-import GameView from 'battleships-ui-vanilla/src/gameview.js';
-import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin.js';
-import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
+import Server from './server';
+import Player from './player';
+import PlayerBattlefield from 'battleships-engine/src/playerbattlefield';
+import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield';
+import Ship from 'battleships-engine/src/ship';
+import GameView from 'battleships-ui-vanilla/src/gameview';
+import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
+import mix from '@ckeditor/ckeditor5-utils/src/mix';
 
 const _server = Symbol( 'server' );
 

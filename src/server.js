@@ -1,5 +1,5 @@
-import EmitterMixin from '@ckeditor/ckeditor5-utils/src/emittermixin.js';
-import mix from '@ckeditor/ckeditor5-utils/src/mix.js';
+import EmitterMixin from '@ckeditor/ckeditor5-utils/src/emittermixin';
+import mix from '@ckeditor/ckeditor5-utils/src/mix';
 
 /* global io, SOCKET_URL */
 
