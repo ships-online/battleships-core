@@ -71,8 +71,8 @@ export default class Server {
 			this[ _socket ] = io( SOCKET_URL );
 
 			this.request( action, data )
-				.then( ( response ) => {
-					eventsToDelegate.forEach( ( name ) => {
+				.then( response => {
+					eventsToDelegate.forEach( name => {
 						this[ _socket ].on( name, data => this.fire( name, data ) );
 					} );
 
@@ -99,7 +99,7 @@ export default class Server {
 				}
 			} );
 
-			this[ _socket ].emit( eventName, ...args  );
+			this[ _socket ].emit( eventName, ...args );
 		} );
 	}
 

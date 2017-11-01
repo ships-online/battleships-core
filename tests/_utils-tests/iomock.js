@@ -39,7 +39,7 @@ describe( '_utils', () => {
 				const otherExpectedCallback = sinon.spy();
 
 				socketMock._events = {
-					[expectedEvent]: [ expectedCallback, otherExpectedCallback ]
+					[ expectedEvent ]: [ expectedCallback, otherExpectedCallback ]
 				};
 
 				socketMock.off( expectedEvent, expectedCallback );
@@ -53,7 +53,7 @@ describe( '_utils', () => {
 				const fakeCallback = sinon.spy();
 
 				socketMock._events = {
-					[expectedEvent]: [ expectedCallback ]
+					[ expectedEvent ]: [ expectedCallback ]
 				};
 
 				socketMock.off( expectedEvent, fakeCallback );
@@ -67,7 +67,7 @@ describe( '_utils', () => {
 				const fakeEvent = 'fakeEvent';
 
 				socketMock._events = {
-					[expectedEvent]: [ expectedCallback ]
+					[ expectedEvent ]: [ expectedCallback ]
 				};
 
 				socketMock.off( fakeEvent, expectedCallback );
@@ -84,7 +84,7 @@ describe( '_utils', () => {
 				const unexpectedCallback = sinon.spy();
 
 				socketMock._events = {
-					[expectedEvent]: [ expectedCallback, otherExpectedCallback ],
+					[ expectedEvent ]: [ expectedCallback, otherExpectedCallback ],
 					'otherEvent': [ unexpectedCallback ]
 				};
 
@@ -100,7 +100,7 @@ describe( '_utils', () => {
 				const expectedCallback = sinon.spy();
 
 				socketMock._events = {
-					[expectedEvent]: [ expectedCallback ]
+					[ expectedEvent ]: [ expectedCallback ]
 				};
 
 				socketMock.emit( expectedEvent, 'param1', 'param2' );

@@ -97,7 +97,7 @@ describe( 'Game', () => {
 		} );
 
 		it( 'should return promise which returns game instance with given data on resolve', () => {
-			return Game.create().then( ( game ) => {
+			return Game.create().then( game => {
 				expect( game ).instanceof( Game );
 				expect( game.settings ).to.deep.equal( {
 					size: 10,
@@ -115,7 +115,7 @@ describe( 'Game', () => {
 			}
 		} );
 
-		it( 'should set gameId and playerId when game will connect to the socket server', ( done ) => {
+		it( 'should set gameId and playerId when game will connect to the socket server', done => {
 			expect( game.gameId ).to.not.ok;
 			expect( game.player.id ).to.not.ok;
 
@@ -132,7 +132,7 @@ describe( 'Game', () => {
 			}, 0 );
 		} );
 
-		it( 'should set opponent into the game and change game status when opponent accept the game', ( done ) => {
+		it( 'should set opponent into the game and change game status when opponent accept the game', done => {
 			socketMock.emit( 'createResponse', { response: {
 				gameId: 'gameId',
 				playerId: 'playerId'
@@ -162,9 +162,9 @@ describe( 'Game', () => {
 			expect( emitSpy.firstCall.calledWithExactly( 'join', 'gameId' ) ).to.true;
 		} );
 
-		it( 'should return promise which returns game instance on resolve', ( done ) => {
+		it( 'should return promise which returns game instance on resolve', done => {
 			Game.join( 'gameId' )
-				.then( ( game ) => {
+				.then( game => {
 					expect( game ).to.instanceof( Game );
 					expect( game.settings ).to.deep.equal( {
 						size: 5,
@@ -199,9 +199,9 @@ describe( 'Game', () => {
 			}, 10 );
 		} );
 
-		it( 'should return promise which returns error on reject', ( done ) => {
+		it( 'should return promise which returns error on reject', done => {
 			Game.join( 'gameId' )
-				.catch( ( error ) => {
+				.catch( error => {
 					expect( error ).to.equal( 'foo-bar' );
 					done();
 				} );
@@ -213,10 +213,10 @@ describe( 'Game', () => {
 			}, 10 );
 		} );
 
-		it( 'should over the game when other player accepts the game', ( done ) => {
+		it( 'should over the game when other player accepts the game', done => {
 			Game.join( 'gameId' )
 				.then( game => game.start() )
-				.catch( ( error ) => {
+				.catch( error => {
 					expect( error ).to.equal( 'started' );
 					done();
 				} );
@@ -241,8 +241,8 @@ describe( 'Game', () => {
 	describe( 'game events', () => {
 		let game;
 
-		beforeEach( ( done ) => {
-			Game.create().then( ( instance ) => {
+		beforeEach( done => {
+			Game.create().then( instance => {
 				game = instance;
 
 				socketMock.emit( 'createResponse', { response: {
@@ -396,8 +396,8 @@ describe( 'Game', () => {
 		} );
 
 		describe( 'gameOver', () => {
-			it( 'should reject game promise', ( done ) => {
-				game.start().catch( ( error ) => {
+			it( 'should reject game promise', done => {
+				game.start().catch( error => {
 					expect( error ).to.equal( 'foo-bar' );
 					done();
 				} );
@@ -412,8 +412,8 @@ describe( 'Game', () => {
 	describe( 'accept()', () => {
 		let game;
 
-		beforeEach( ( done ) => {
-			Game.join( 'gameId' ).then( ( instance ) => {
+		beforeEach( done => {
+			Game.join( 'gameId' ).then( instance => {
 				game = instance;
 				done();
 			} );
@@ -431,7 +431,6 @@ describe( 'Game', () => {
 			expect( () => {
 				game.accept();
 			} ).to.throw( Error, 'You are already in game.' );
-
 		} );
 
 		it( 'should throw an error when game status is not available', () => {
@@ -442,7 +441,7 @@ describe( 'Game', () => {
 			} ).to.throw( Error, 'Not available.' );
 		} );
 
-		it( 'should set player in the game and change status to `full`', ( done ) => {
+		it( 'should set player in the game and change status to `full`', done => {
 			game.status = 'available';
 
 			game.accept();
@@ -456,8 +455,8 @@ describe( 'Game', () => {
 			}, 0 );
 		} );
 
-		it( 'should over the game when server response with error', ( done ) => {
-			game.start().catch( ( error ) => {
+		it( 'should over the game when server response with error', done => {
+			game.start().catch( error => {
 				expect( error ).to.equal( 'foo-bar' );
 				done();
 			} );
@@ -474,7 +473,7 @@ describe( 'Game', () => {
 		let game;
 
 		beforeEach( () => {
-			return Game.create().then( instance => game = instance );
+			return Game.create().then( instance => ( game = instance ) );
 		} );
 
 		it( 'should throw an error when player is ready', () => {
@@ -532,11 +531,11 @@ describe( 'Game', () => {
 			emitSpy.restore();
 		} );
 
-		it( 'should over the game when server response with error', ( done ) => {
+		it( 'should over the game when server response with error', done => {
 			game.player.isReady = false;
 			game.player.isInGame = true;
 
-			game.start().catch( ( error ) => {
+			game.start().catch( error => {
 				expect( error ).to.equal( 'foo-bar' );
 				done();
 			} );
@@ -551,7 +550,7 @@ describe( 'Game', () => {
 		let game;
 
 		beforeEach( () => {
-			return Game.create().then( instance => game = instance );
+			return Game.create().then( instance => ( game = instance ) );
 		} );
 
 		it( 'should throw an error when game status is invalid', () => {
@@ -584,7 +583,7 @@ describe( 'Game', () => {
 			sinon.assert.calledWithExactly( emitSpy, 'shoot', [ 1, 1 ] );
 		} );
 
-		it( 'should mark field base on type returned by the server and set activePlayer', ( done ) => {
+		it( 'should mark field base on type returned by the server and set activePlayer', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
 			game.activePlayer = 'playerId';
@@ -606,7 +605,7 @@ describe( 'Game', () => {
 			}, 0 );
 		} );
 
-		it( 'should set ship on the battlefield when ship is destroyed', ( done ) => {
+		it( 'should set ship on the battlefield when ship is destroyed', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
 			game.activePlayer = 'playerId';
@@ -637,7 +636,7 @@ describe( 'Game', () => {
 			}, 0 );
 		} );
 
-		it( 'should over the game when player won', ( done ) => {
+		it( 'should over the game when player won', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
 			game.activePlayer = 'playerId';
@@ -665,7 +664,7 @@ describe( 'Game', () => {
 		let game;
 
 		beforeEach( () => {
-			return Game.create().then( instance => game = instance );
+			return Game.create().then( instance => ( game = instance ) );
 		} );
 
 		it( 'should throw an error when game status is invalid', () => {

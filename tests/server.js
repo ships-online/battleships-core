@@ -16,8 +16,8 @@ describe( 'Server', () => {
 	} );
 
 	describe( 'connect()', () => {
-		it( 'should return promise and resolve with gameId', ( done ) => {
-			server.create( { foo: 'bar' } ).then( ( gameId ) => {
+		it( 'should return promise and resolve with gameId', done => {
+			server.create( { foo: 'bar' } ).then( gameId => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'create' );
@@ -30,8 +30,8 @@ describe( 'Server', () => {
 			socketMock.emit( 'createResponse', { response: 'someId' } );
 		} );
 
-		it( 'should return promise and reject with error', ( done ) => {
-			server.create( { foo: 'bar' } ).catch( ( error ) => {
+		it( 'should return promise and reject with error', done => {
+			server.create( { foo: 'bar' } ).catch( error => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'create' );
@@ -44,7 +44,7 @@ describe( 'Server', () => {
 			socketMock.emit( 'createResponse', { error: 'error' } );
 		} );
 
-		it( 'should delegate socket events', ( done ) => {
+		it( 'should delegate socket events', done => {
 			server.create( { foo: 'bar' } ).then( () => {
 				const spy = sinon.spy();
 
@@ -83,8 +83,8 @@ describe( 'Server', () => {
 	} );
 
 	describe( 'join()', () => {
-		it( 'should return promise and resolve with gameId', ( done ) => {
-			server.join( 'someId' ).then( ( settings ) => {
+		it( 'should return promise and resolve with gameId', done => {
+			server.join( 'someId' ).then( settings => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'join' );
@@ -97,8 +97,8 @@ describe( 'Server', () => {
 			socketMock.emit( 'joinResponse', { response: { foo: 'bar' } } );
 		} );
 
-		it( 'should return promise and reject with error', ( done ) => {
-			server.join( 'someId' ).catch( ( error ) => {
+		it( 'should return promise and reject with error', done => {
+			server.join( 'someId' ).catch( error => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'join' );
@@ -111,7 +111,7 @@ describe( 'Server', () => {
 			socketMock.emit( 'joinResponse', { error: 'error' } );
 		} );
 
-		it( 'should delegate socket events', ( done ) => {
+		it( 'should delegate socket events', done => {
 			server.join( 'someId' ).then( () => {
 				const spy = sinon.spy();
 
@@ -150,7 +150,7 @@ describe( 'Server', () => {
 	} );
 
 	describe( 'request()', () => {
-		beforeEach( ( done ) => {
+		beforeEach( done => {
 			server.create().then( () => {
 				emitSpy.reset();
 				done();
@@ -158,11 +158,11 @@ describe( 'Server', () => {
 			socketMock.emit( 'createResponse', { response: 'someId' } );
 		} );
 
-		it( 'should emit event to the server, return promise and resolve with response', ( done ) => {
+		it( 'should emit event to the server, return promise and resolve with response', done => {
 			const requestData = { foo: 'bar' };
 			const responseData = { lorem: 'ipsum' };
 
-			server.request( 'doSomething', requestData ).then( ( response ) => {
+			server.request( 'doSomething', requestData ).then( response => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
@@ -175,10 +175,10 @@ describe( 'Server', () => {
 			socketMock.emit( 'doSomethingResponse', { response: responseData } );
 		} );
 
-		it( 'should return promise and resolve when there is no response data', ( done ) => {
+		it( 'should return promise and resolve when there is no response data', done => {
 			const requestData = { foo: 'bar' };
 
-			server.request( 'doSomething', requestData ).then( ( response ) => {
+			server.request( 'doSomething', requestData ).then( response => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
@@ -191,11 +191,11 @@ describe( 'Server', () => {
 			socketMock.emit( 'doSomethingResponse' );
 		} );
 
-		it( 'should emit event to the server, return promise and reject with error', ( done ) => {
+		it( 'should emit event to the server, return promise and reject with error', done => {
 			const requestData = { foo: 'bar' };
 			const error = 'error';
 
-			server.request( 'doSomething', requestData ).catch( ( error ) => {
+			server.request( 'doSomething', requestData ).catch( error => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
@@ -205,7 +205,7 @@ describe( 'Server', () => {
 				done();
 			} );
 
-			socketMock.emit( 'doSomethingResponse', { error: error } );
+			socketMock.emit( 'doSomethingResponse', { error } );
 		} );
 	} );
 } );

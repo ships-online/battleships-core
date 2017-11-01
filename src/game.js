@@ -151,7 +151,7 @@ export default class Game {
 			game.status = 'full';
 		} );
 
-		server.create( game.settings ).then( ( data ) => {
+		server.create( game.settings ).then( data => {
 			game.gameId = data.gameId;
 			game.player.id = data.playerId;
 		} );
@@ -170,7 +170,7 @@ export default class Game {
 		const server = new Server();
 
 		return server.join( gameId )
-			.then( ( data ) => {
+			.then( data => {
 				const game = new Game( server, false, data.settings.size, data.settings.shipsSchema );
 
 				game.player.id = data.playerId;
@@ -216,7 +216,7 @@ export default class Game {
 				this.player.isInGame = true;
 				this.status = 'full';
 			} )
-			.catch( ( error ) => this._finishGame( error ) );
+			.catch( error => this._finishGame( error ) );
 	}
 
 	/**
@@ -256,7 +256,7 @@ export default class Game {
 			throw new Error( 'Not your turn.' );
 		}
 
-		this[ _server ].request( 'shoot', position ).then( ( data ) => {
+		this[ _server ].request( 'shoot', position ).then( data => {
 			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
