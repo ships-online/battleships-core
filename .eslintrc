@@ -1,3 +1,7 @@
 {
-  "extends": "ckeditor5"
+  "extends": "ckeditor5",
+  "root": true,
+  "env": {
+    "browser": true
+  }
 }
