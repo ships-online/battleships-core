@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "The core of Battleships game.",
   "scripts": {
-    "test": "./node_modules/.bin/gulp test -c",
+    "test": "gulp test -c",
     "lint": "eslint --quiet '**/*.js'",
     "precommit": "lint-staged"
   },
@@ -23,8 +23,12 @@
     "battleships-ui-vanilla": "https://github.com/ships-online/battleships-ui-vanilla.git"
   },
   "devDependencies": {
+    "battleships-dev-tools": "https://github.com/ships-online/battleships-dev-tools.git",
+    "eslint": "^4.10.0",
+    "eslint-config-ckeditor5": "^1.0.6",
     "gulp": "^3.9.1",
-    "battleships-dev-tools": "https://github.com/ships-online/battleships-dev-tools.git"
+    "husky": "^0.14.3",
+    "lint-staged": "^4.3.0"
   },
   "lint-staged": {
     "**/*.js": [
