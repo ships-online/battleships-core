@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "The core of Battleships game.",
   "scripts": {
-    "test": "gulp test -c",
+    "test": "battleships-test",
     "lint": "eslint --quiet '**/*.js'",
     "precommit": "lint-staged"
   },
