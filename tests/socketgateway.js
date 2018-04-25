@@ -1,12 +1,12 @@
-import Server from '../src/server';
+import SocketGateway from '../src/socketgateway';
 import { ioMock, socketMock } from './_utils/iomock';
 
-describe( 'Server', () => {
-	let server, emitSpy;
+describe( 'SocketGateway', () => {
+	let socketGateway, emitSpy;
 
 	beforeEach( () => {
 		window.io = ioMock;
-		server = new Server();
+		socketGateway = new SocketGateway();
 		emitSpy = sinon.spy( socketMock, 'emit' );
 	} );
 
@@ -17,7 +17,7 @@ describe( 'Server', () => {
 
 	describe( 'connect()', () => {
 		it( 'should return promise and resolve with gameId', done => {
-			server.create( { foo: 'bar' } ).then( gameId => {
+			socketGateway.create( 'url', { foo: 'bar' } ).then( gameId => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'create' );
@@ -31,7 +31,7 @@ describe( 'Server', () => {
 		} );
 
 		it( 'should return promise and reject with error', done => {
-			server.create( { foo: 'bar' } ).catch( error => {
+			socketGateway.create( 'url', { foo: 'bar' } ).catch( error => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'create' );
@@ -45,18 +45,18 @@ describe( 'Server', () => {
 		} );
 
 		it( 'should delegate socket events', done => {
-			server.create( { foo: 'bar' } ).then( () => {
+			socketGateway.create( 'url', { foo: 'bar' } ).then( () => {
 				const spy = sinon.spy();
 
-				server.on( 'interestedPlayerJoined', spy );
-				server.on( 'interestedPlayerAccepted', spy );
-				server.on( 'playerLeft', spy );
-				server.on( 'playerReady', spy );
-				server.on( 'playerShoot', spy );
-				server.on( 'playerRequestRematch', spy );
-				server.on( 'battleStarted', spy );
-				server.on( 'gameOver', spy );
-				server.on( 'rematch', spy );
+				socketGateway.on( 'interestedPlayerJoined', spy );
+				socketGateway.on( 'interestedPlayerAccepted', spy );
+				socketGateway.on( 'playerLeft', spy );
+				socketGateway.on( 'playerReady', spy );
+				socketGateway.on( 'playerShoot', spy );
+				socketGateway.on( 'playerRequestRematch', spy );
+				socketGateway.on( 'battleStarted', spy );
+				socketGateway.on( 'gameOver', spy );
+				socketGateway.on( 'rematch', spy );
 
 				socketMock.emit( 'interestedPlayerJoined' );
 				socketMock.emit( 'interestedPlayerAccepted' );
@@ -84,7 +84,7 @@ describe( 'Server', () => {
 
 	describe( 'join()', () => {
 		it( 'should return promise and resolve with gameId', done => {
-			server.join( 'someId' ).then( settings => {
+			socketGateway.join( 'url', 'someId' ).then( settings => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'join' );
@@ -98,7 +98,7 @@ describe( 'Server', () => {
 		} );
 
 		it( 'should return promise and reject with error', done => {
-			server.join( 'someId' ).catch( error => {
+			socketGateway.join( 'url', 'someId' ).catch( error => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'join' );
@@ -112,18 +112,18 @@ describe( 'Server', () => {
 		} );
 
 		it( 'should delegate socket events', done => {
-			server.join( 'someId' ).then( () => {
+			socketGateway.join( 'url', 'someId' ).then( () => {
 				const spy = sinon.spy();
 
-				server.on( 'interestedPlayerJoined', spy );
-				server.on( 'interestedPlayerAccepted', spy );
-				server.on( 'playerLeft', spy );
-				server.on( 'playerReady', spy );
-				server.on( 'playerShoot', spy );
-				server.on( 'playerRequestRematch', spy );
-				server.on( 'battleStarted', spy );
-				server.on( 'gameOver', spy );
-				server.on( 'rematch', spy );
+				socketGateway.on( 'interestedPlayerJoined', spy );
+				socketGateway.on( 'interestedPlayerAccepted', spy );
+				socketGateway.on( 'playerLeft', spy );
+				socketGateway.on( 'playerReady', spy );
+				socketGateway.on( 'playerShoot', spy );
+				socketGateway.on( 'playerRequestRematch', spy );
+				socketGateway.on( 'battleStarted', spy );
+				socketGateway.on( 'gameOver', spy );
+				socketGateway.on( 'rematch', spy );
 
 				socketMock.emit( 'interestedPlayerJoined' );
 				socketMock.emit( 'interestedPlayerAccepted' );
@@ -151,18 +151,18 @@ describe( 'Server', () => {
 
 	describe( 'request()', () => {
 		beforeEach( done => {
-			server.create().then( () => {
+			socketGateway.create().then( () => {
 				emitSpy.reset();
 				done();
 			} );
 			socketMock.emit( 'createResponse', { response: 'someId' } );
 		} );
 
-		it( 'should emit event to the server, return promise and resolve with response', done => {
+		it( 'should emit event to the socketGateway, return promise and resolve with response', done => {
 			const requestData = { foo: 'bar' };
 			const responseData = { lorem: 'ipsum' };
 
-			server.request( 'doSomething', requestData ).then( response => {
+			socketGateway.request( 'doSomething', requestData ).then( response => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
@@ -178,7 +178,7 @@ describe( 'Server', () => {
 		it( 'should return promise and resolve when there is no response data', done => {
 			const requestData = { foo: 'bar' };
 
-			server.request( 'doSomething', requestData ).then( response => {
+			socketGateway.request( 'doSomething', requestData ).then( response => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
@@ -191,11 +191,11 @@ describe( 'Server', () => {
 			socketMock.emit( 'doSomethingResponse' );
 		} );
 
-		it( 'should emit event to the server, return promise and reject with error', done => {
+		it( 'should emit event to the socketGateway, return promise and reject with error', done => {
 			const requestData = { foo: 'bar' };
 			const error = 'error';
 
-			server.request( 'doSomething', requestData ).catch( error => {
+			socketGateway.request( 'doSomething', requestData ).catch( error => {
 				expect( emitSpy.calledTwice ).to.true;
 
 				expect( emitSpy.firstCall.args[ 0 ] ).to.equal( 'doSomething' );
@@ -206,6 +206,36 @@ describe( 'Server', () => {
 			} );
 
 			socketMock.emit( 'doSomethingResponse', { error } );
+		} );
+	} );
+
+	describe( 'destroy()', () => {
+		it( 'should stop listen to events', done => {
+			socketGateway.create( 'url', { foo: 'bar' } ).then( () => {
+				const spy = sinon.spy( socketGateway, 'stopListening' );
+
+				socketGateway.destroy();
+
+				sinon.assert.calledOnce( spy );
+
+				done();
+			} );
+
+			socketMock.emit( 'createResponse', { response: 'someId' } );
+		} );
+
+		it( 'should disconnect websocket', done => {
+			socketGateway.create( 'url', { foo: 'bar' } ).then( () => {
+				const spy = sinon.spy( socketMock, 'disconnect' );
+
+				socketGateway.destroy();
+
+				sinon.assert.calledOnce( spy );
+
+				done();
+			} );
+
+			socketMock.emit( 'createResponse', { response: 'someId' } );
 		} );
 	} );
 } );
