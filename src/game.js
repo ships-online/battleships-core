@@ -1,4 +1,4 @@
-import Server from './server';
+import SocketGateway from './socketgateway';
 import Player from './player';
 import PlayerBattlefield from 'battleships-engine/src/playerbattlefield';
 import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield';
@@ -7,26 +7,47 @@ import GameView from 'battleships-ui-vanilla/src/gameview';
 import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 import mix from '@ckeditor/ckeditor5-utils/src/mix';
 
-const _server = Symbol( 'server' );
+const _connection = Symbol( 'SocketGateway' );
 
 /**
  * @mixes ObservableMixin
  */
 export default class Game {
 	/**
-	 * @param {Server} server Server instance.
-	 * @param {Boolean} [isHost=true] When `true` then game is created by a host (#player is marker as host).
-	 * @param {Number} [size=10] Size of the battlefield.
-	 * @param {Object} [shipsSchema={ 1: 4, 2: 3, 3: 2, 4: 1 }] Defines how many ships of specific length will be in the game.
+	 * @param {SocketGateway} socketGateway Socket gateway instance.
+	 * @param {Object} [settings={}] Game settings.
+	 * @param {Number} [settings.size=10] Size of the battlefield.
+	 * @param {Object} [settings.shipsSchema={1:4,2:3,3:2,4:1}] Defines how many ships of specific length will be in the game.
 	 */
-	constructor( server, isHost = true, size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } ) {
+	constructor( socketGateway, { size = 10, shipsSchema = { 1: 4, 2: 3, 3: 2, 4: 1 } } = {} ) {
 		/**
-		 * Game settings.
+		 * Player.
 		 *
-		 *
-		 * @type {Object}
+		 * @type {Player}
 		 */
-		this.settings = { size, shipsSchema };
+		this.player = new Player( new PlayerBattlefield( size, shipsSchema ) );
+
+		/**
+		 * Opponent.
+		 *
+		 * @type {Player}
+		 */
+		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ) );
+
+		/**
+		 * Game view.
+		 *
+		 * @type {GameView}
+		 */
+		this.view = new GameView( this );
+
+		/**
+		 * Id of player that has wont the game.
+		 * Is defined only when #status is 'over'.
+		 *
+		 * @type {null|String}
+		 */
+		this.winnerId = null;
 
 		/**
 		 * Game id, used e.g. to create share url.
@@ -53,20 +74,12 @@ export default class Game {
 		this.set( 'status', 'available' );
 
 		/**
-		 * Id of winner player. Is set only when `#status` is `over`.
-		 *
-		 * @observable
-		 * @type {null|String}
-		 */
-		this.set( 'winner', null );
-
-		/**
 		 * Id of active player.
 		 *
 		 * @observable
 		 * @type {null|String}
 		 */
-		this.set( 'activePlayer', null );
+		this.set( 'activePlayerId', null );
 
 		/**
 		 * Stores server error as observable property to reject `#start()` promise when error occurs.
@@ -78,33 +91,12 @@ export default class Game {
 		this.set( '_serverErrorName', null );
 
 		/**
-		 * Player.
-		 *
-		 * @type {Player}
-		 */
-		this.player = new Player( PlayerBattlefield.createWithShips( size, shipsSchema ), isHost );
-
-		/**
-		 * Opponent.
-		 *
-		 * @type {Player}
-		 */
-		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ), !isHost );
-
-		/**
-		 * Game view.
-		 *
-		 * @type {GameView}
-		 */
-		this.view = new GameView( this );
-
-		/**
-		 * Server instance. Provides Client <-> Server communication.
+		 * Server instance. Handles Client <-> Server communication.
 		 *
 		 * @private
-		 * @type {Server}
+		 * @type {SocketGateway}
 		 */
-		this[ _server ] = server;
+		this[ _connection ] = socketGateway;
 	}
 
 	/**
@@ -122,38 +114,41 @@ export default class Game {
 	 * @returns {String}
 	 */
 	get inviteUrl() {
-		const location = window.location;
+		const { protocol, host, pathname } = window.location;
 
-		return `${ location.protocol }//${ location.host }${ location.pathname }#${ this.gameId }`;
+		return `${ protocol }//${ host }${ pathname }#${ this.gameId }`;
 	}
 
 	/**
 	 * Creates the game.
 	 *
 	 * @static
-	 * @param {Number} [size] Size of the battlefield. How many fields width and height will be battlefield.
-	 * @param {Object} [shipsSchema] Defines how many ships of specified types will be allowed in the game.
-	 * @returns {Promise} Promise that returns game instance when is resolved.
+	 * @param {String} webSocketUrl Socket url.
+	 * @param {Object} [settings={}] Game settings.
+	 * @param {Number} [settings.size=10] Size of the battlefield. How many fields width and height will be battlefield.
+	 * @param {Object} [settings.shipsSchema={4:4,3:2,2:3,1:4}] Defines how many ships of specified types will be allowed in the game.
+	 * @returns {Promise} Promise that returns game instance on resolve.
 	 */
-	static create( size, shipsSchema ) {
-		const server = new Server();
-		const game = new Game( server, true, size, shipsSchema );
+	static create( webSocketUrl, settings ) {
+		const socketGateway = new SocketGateway( webSocketUrl );
+		const game = new Game( socketGateway, settings );
 
 		game.player.isInGame = true;
+		game.player.isHost = true;
 		game.player.battlefield.random();
 
 		game._listenToTheServerEvents();
 
 		// One of interested players have joined the game.
-		game.listenTo( game[ _server ], 'interestedPlayerAccepted', ( evt, data ) => {
+		game.listenTo( game[ _connection ], 'interestedPlayerAccepted', ( evt, data ) => {
 			game.opponent.id = data.id;
 			game.opponent.isInGame = true;
 			game.status = 'full';
 		} );
 
-		server.create( game.settings ).then( data => {
-			game.gameId = data.gameId;
-			game.player.id = data.playerId;
+		socketGateway.create( game.player.battlefield.settings ).then( gameData => {
+			game.gameId = gameData.gameId;
+			game.player.id = gameData.playerId;
 		} );
 
 		return Promise.resolve( game );
@@ -163,33 +158,33 @@ export default class Game {
 	 * Joins the game of given id.
 	 *
 	 * @static
+	 * @param {String} webSocketUrl Socket url.
 	 * @param {String} gameId Id of game you want to join.
-	 * @returns {Promise} Promise that returns game instance when is resolved and errorName when is rejected.
+	 * @returns {Promise} Promise that returns game instance when on resolve and errorName on reject.
 	 */
-	static join( gameId ) {
-		const server = new Server();
+	static join( webSocketUrl, gameId ) {
+		const socketGateway = new SocketGateway( webSocketUrl );
 
-		return server.join( gameId )
-			.then( data => {
-				const game = new Game( server, false, data.settings.size, data.settings.shipsSchema );
+		return socketGateway.join( gameId ).then( gameData => {
+			const game = new Game( socketGateway, gameData.settings );
 
-				game.player.id = data.playerId;
-				game.opponent.id = data.opponentId;
-				game.opponent.isReady = data.isOpponentReady;
-				game.interestedPlayersNumber = data.interestedPlayersNumber;
-				game.player.battlefield.random();
+			game.player.id = gameData.playerId;
+			game.opponent.id = gameData.opponentId;
+			game.opponent.isReady = gameData.isOpponentReady;
+			game.interestedPlayersNumber = gameData.interestedPlayersNumber;
+			game.player.battlefield.random();
 
-				// One of the interested players have joined the game, so the game is over other interested players.
-				game.listenTo( server, 'interestedPlayerAccepted', () => game._finishGame( 'started' ) );
+			// One of the interested players have joined the game, so the game is over for the other interested players.
+			game.listenTo( socketGateway, 'interestedPlayerAccepted', () => game._finishGame( 'started' ) );
 
-				game._listenToTheServerEvents();
+			game._listenToTheServerEvents();
 
-				return game;
-			} );
+			return game;
+		} );
 	}
 
 	/**
-	 * Starts listen on errors from socket server.
+	 * Starts listen on errors from socket.
 	 *
 	 * @returns {Promise<null, error>} Promise that returns error on reject.
 	 */
@@ -211,7 +206,7 @@ export default class Game {
 			throw new Error( 'Not available.' );
 		}
 
-		this[ _server ].request( 'accept' )
+		this[ _connection ].request( 'accept' )
 			.then( () => {
 				this.player.isInGame = true;
 				this.status = 'full';
@@ -231,19 +226,19 @@ export default class Game {
 			throw new Error( 'You need to join the game first.' );
 		}
 
-		const shipsCollection = this.player.battlefield.shipsCollection;
+		const { isCollision, shipsCollection } = this.player.battlefield;
 
-		if ( this.player.battlefield.isCollision ) {
+		if ( isCollision ) {
 			throw new Error( 'Invalid ships configuration.' );
 		}
 
 		this.player.isReady = true;
 
-		this[ _server ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._finishGame( error ) );
+		this[ _connection ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._finishGame( error ) );
 	}
 
 	/**
-	 * Takes a shoot the specified position.
+	 * Takes a shoot at the given position.
 	 *
 	 * @param {Array<Number, Number>} position Position on the battlefield.
 	 */
@@ -252,23 +247,23 @@ export default class Game {
 			throw new Error( 'Invalid game status.' );
 		}
 
-		if ( this.activePlayer != this.player.id ) {
+		if ( this.activePlayerId != this.player.id ) {
 			throw new Error( 'Not your turn.' );
 		}
 
-		this[ _server ].request( 'shoot', position ).then( data => {
+		this[ _connection ].request( 'shoot', position ).then( data => {
 			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
 				this.opponent.battlefield.shipsCollection.add( new Ship( data.sunk ) );
 			}
 
-			if ( data.winner ) {
-				this.winner = data.winner;
+			if ( data.winnerId ) {
 				this.status = 'over';
-				this.activePlayer = null;
+				this.winnerId = data.winnerId;
+				this.activePlayerId = null;
 			} else {
-				this.activePlayer = data.activePlayer;
+				this.activePlayerId = data.activePlayerId;
 			}
 		} );
 	}
@@ -281,8 +276,8 @@ export default class Game {
 			throw new Error( 'Invalid game status.' );
 		}
 
-		this[ _server ].request( 'requestRematch' );
 		this.player.isWaitingForRematch = true;
+		this[ _connection ].request( 'requestRematch' );
 	}
 
 	/**
@@ -293,18 +288,18 @@ export default class Game {
 	}
 
 	/**
-	 * Handles common socket server events.
+	 * Handles common socket events.
 	 *
 	 * @private
 	 */
 	_listenToTheServerEvents() {
 		// Player enter on the game URL but not accept the game yet.
-		this.listenTo( this[ _server ], 'interestedPlayerJoined', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'interestedPlayerJoined', ( evt, data ) => {
 			this.interestedPlayersNumber = data.interestedPlayersNumber;
 		} );
 
-		// Player left the game before battle start.
-		this.listenTo( this[ _server ], 'playerLeft', ( event, data ) => {
+		// Player left the game before the battle start.
+		this.listenTo( this[ _connection ], 'playerLeft', ( event, data ) => {
 			if ( data.opponentId == this.opponent.id ) {
 				this.opponent.id = null;
 				this.opponent.isReady = false;
@@ -316,31 +311,31 @@ export default class Game {
 		} );
 
 		// Player is ready for the battle.
-		this.listenTo( this[ _server ], 'playerReady', () => {
+		this.listenTo( this[ _connection ], 'playerReady', () => {
 			this.opponent.isReady = true;
 		} );
 
-		// The battle is started.
-		this.listenTo( this[ _server ], 'battleStarted', ( evt, data ) => {
-			this.activePlayer = data.activePlayer;
+		// The battle has started.
+		this.listenTo( this[ _connection ], 'battleStarted', ( evt, data ) => {
+			this.activePlayerId = data.activePlayerId;
 			this.status = 'battle';
 		} );
 
 		// Player shoot.
-		this.listenTo( this[ _server ], 'playerShoot', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'playerShoot', ( evt, data ) => {
 			this.player.battlefield.markAs( data.position, data.type );
 
-			if ( data.winner ) {
+			if ( data.winnerId ) {
 				this.status = 'over';
-				this.activePlayer = null;
-				this.winner = data.winner;
+				this.activePlayerId = null;
+				this.winnerId = data.winnerId;
 			} else {
-				this.activePlayer = data.activePlayer;
+				this.activePlayerId = data.activePlayerId;
 			}
 		} );
 
 		// One of the players requested rematch.
-		this.listenTo( this[ _server ], 'playerRequestRematch', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'playerRequestRematch', ( evt, data ) => {
 			if ( this.player.id == data.playerId ) {
 				this.player.isWaitingForRematch = true;
 			} else {
@@ -349,16 +344,16 @@ export default class Game {
 		} );
 
 		// Both players requested rematch.
-		this.listenTo( this[ _server ], 'rematch', () => {
+		this.listenTo( this[ _connection ], 'rematch', () => {
 			this.status = 'full';
+			this.winnerId = null;
 			this.opponent.reset();
 			this.player.reset();
 			this.player.battlefield.random();
-			this.winner = null;
 		} );
 
-		// Game is over, one of the players left the game after the battle was started.
-		this.listenTo( this[ _server ], 'gameOver', ( evt, data ) => {
+		// Game is over, one of the players left during the battle.
+		this.listenTo( this[ _connection ], 'gameOver', ( evt, data ) => {
 			this._finishGame( data );
 		} );
 	}
@@ -372,7 +367,7 @@ export default class Game {
 	_finishGame( errorName ) {
 		this._serverErrorName = errorName;
 		this.destroy();
-		this[ _server ].destroy();
+		this[ _connection ].destroy();
 		this.view.destroy();
 	}
 }

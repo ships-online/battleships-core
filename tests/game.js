@@ -1,64 +1,55 @@
 import Game from '../src/game';
 import Player from '../src/player';
-import Server from '../src/server';
+import SocketGateway from '../src/socketgateway';
 import GameView from 'battleships-ui-vanilla/src/gameview';
 import { ioMock, socketMock } from './_utils/iomock';
 
 describe( 'Game', () => {
-	let server, game, sandbox;
+	let socketGateway, game, sandbox;
 
 	beforeEach( () => {
 		sandbox = sinon.sandbox.create();
 		window.io = ioMock;
-		server = new Server();
-		game = new Game( server, false, 5, { 1: 2 } );
+
+		socketGateway = new SocketGateway();
+		game = new Game( socketGateway, { size: 5, shipsSchema: { 1: 2 } } );
 	} );
 
 	afterEach( () => {
 		sandbox.restore();
 		game.destroy();
-		delete window.io;
+		window.io = undefined;
 	} );
 
 	describe( 'constructor()', () => {
 		it( 'should create an Game instance with given data', () => {
-			expect( game ).to.have.property( 'settings' ).to.deep.equal( { size: 5, shipsSchema: { 1: 2 } } );
 			expect( game ).to.have.property( 'gameId', null );
 			expect( game ).to.have.property( 'interestedPlayersNumber', 0 );
 			expect( game ).to.have.property( 'status', 'available' );
-			expect( game ).to.have.property( 'activePlayer', null );
-			expect( game ).to.have.property( 'winner', null );
+			expect( game ).to.have.property( 'activePlayerId', null );
+			expect( game ).to.have.property( 'winnerId', null );
 			expect( game ).to.have.property( 'player' ).to.instanceof( Player );
 			expect( game ).to.have.property( 'opponent' ).to.instanceof( Player );
 			expect( game ).to.have.property( 'view' ).to.instanceof( GameView );
 
-			expect( game.player ).to.have.property( 'isHost', false );
 			expect( game.player.battlefield ).to.have.property( 'size', 5 );
 			expect( game.player.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( { 1: 2 } );
-			expect( game.player.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 2 );
+			expect( game.player.battlefield.shipsCollection ).to.length( 2 );
 
-			expect( game.opponent ).to.have.property( 'isHost', true );
 			expect( game.opponent.battlefield ).to.have.property( 'size', 5 );
 			expect( game.opponent.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( { 1: 2 } );
-			expect( game.opponent.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 0 );
+			expect( game.opponent.battlefield.shipsCollection ).to.length( 0 );
 		} );
 
 		it( 'should create an Game instance with default data', () => {
 			const schema = { 1: 4, 2: 3, 3: 2, 4: 1 };
 
-			game = new Game( server );
+			game = new Game( socketGateway );
 
-			expect( game ).to.have.property( 'settings' ).to.deep.equal( {
-				size: 10,
-				shipsSchema: schema
-			} );
-
-			expect( game.player ).to.have.property( 'isHost', true );
 			expect( game.player.battlefield ).to.have.property( 'size', 10 );
 			expect( game.player.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( schema );
 			expect( game.player.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 10 );
 
-			expect( game.opponent ).to.have.property( 'isHost', false );
 			expect( game.opponent.battlefield ).to.have.property( 'size', 10 );
 			expect( game.opponent.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( schema );
 			expect( game.opponent.battlefield.shipsCollection ).to.have.property( 'length' ).to.equal( 0 );
@@ -89,33 +80,36 @@ describe( 'Game', () => {
 		let game;
 
 		beforeEach( () => {
-			return Game.create().then( gameInstance => ( game = gameInstance ) );
+			return Game.create( 'url' ).then( gameInstance => ( game = gameInstance ) );
 		} );
 
-		it( 'should return promise which returns game instance on resolve', () => {
+		it( 'should return promise that returns game instance with default data', () => {
 			expect( game ).instanceof( Game );
+			expect( game.player.battlefield.settings ).to.deep.equal( {
+				size: 10,
+				shipsSchema: { 1: 4, 2: 3, 3: 2, 4: 1 }
+			} );
 		} );
 
-		it( 'should return promise which returns game instance with given data on resolve', () => {
-			return Game.create().then( game => {
+		it( 'should return promise that returns game instance with given data', () => {
+			return Game.create( 'url', { size: 5, shipsSchema: { 1: 1 } } ).then( game => {
 				expect( game ).instanceof( Game );
-				expect( game.settings ).to.deep.equal( {
-					size: 10,
-					shipsSchema: { 1: 4, 2: 3, 3: 2, 4: 1 }
+				expect( game.player.battlefield.settings ).to.deep.equal( {
+					size: 5,
+					shipsSchema: { 1: 1 }
 				} );
 			} );
 		} );
 
-		it( 'should set player into the game and randomize player ships', () => {
+		it( 'should set player into the game as host and randomize player ships', () => {
 			expect( game.player.isInGame ).to.true;
 			expect( game.player.isHost ).to.true;
 
-			for ( const ship of game.player.battlefield.shipsCollection ) {
-				expect( ship.position ).to.not.deep.equal( [ null, null ] );
-			}
+			expect( Array.from( game.player.battlefield.shipsCollection, ship => ship.position ) )
+				.to.not.include( [ [ null, null ] ] );
 		} );
 
-		it( 'should set gameId and playerId when game will connect to the socket server', done => {
+		it( 'should set gameId and playerId when game will connect to the socketGateway', done => {
 			expect( game.gameId ).to.not.ok;
 			expect( game.player.id ).to.not.ok;
 
@@ -153,20 +147,11 @@ describe( 'Game', () => {
 	} );
 
 	describe( 'static join()', () => {
-		it( 'should emit socket event with game id', () => {
-			const emitSpy = sandbox.spy( socketMock, 'emit' );
-
-			Game.join( 'gameId' );
-
-			expect( emitSpy.calledOnce ).to.true;
-			expect( emitSpy.firstCall.calledWithExactly( 'join', 'gameId' ) ).to.true;
-		} );
-
 		it( 'should return promise which returns game instance on resolve', done => {
-			Game.join( 'gameId' )
+			Game.join( 'url', 'gameId' )
 				.then( game => {
 					expect( game ).to.instanceof( Game );
-					expect( game.settings ).to.deep.equal( {
+					expect( game.player.battlefield.settings ).to.deep.equal( {
 						size: 5,
 						shipsSchema: { 3: 3 }
 					} );
@@ -304,10 +289,10 @@ describe( 'Game', () => {
 		describe( 'battleStarted', () => {
 			it( 'should set active player and change game status', () => {
 				socketMock.emit( 'battleStarted', {
-					activePlayer: 'playerId'
+					activePlayerId: 'playerId'
 				} );
 
-				expect( game.activePlayer ).to.equal( 'playerId' );
+				expect( game.activePlayerId ).to.equal( 'playerId' );
 				expect( game.status ).to.equal( 'battle' );
 			} );
 		} );
@@ -335,22 +320,22 @@ describe( 'Game', () => {
 				socketMock.emit( 'playerShoot', {
 					position: [ 2, 2 ],
 					type: 'missed',
-					activePlayer: 'someId'
+					activePlayerId: 'someId'
 				} );
 
-				expect( game.activePlayer ).to.equal( 'someId' );
+				expect( game.activePlayerId ).to.equal( 'someId' );
 			} );
 
 			it( 'should over the game when one of the player has won', () => {
 				socketMock.emit( 'playerShoot', {
 					position: [ 2, 2 ],
 					type: 'hit',
-					winner: 'someId'
+					winnerId: 'someId'
 				} );
 
-				expect( game.activePlayer ).to.null;
+				expect( game.activePlayerId ).to.null;
 				expect( game.status ).to.equal( 'over' );
-				expect( game.winner ).to.equal( 'someId' );
+				expect( game.winnerId ).to.equal( 'someId' );
 			} );
 		} );
 
@@ -383,7 +368,7 @@ describe( 'Game', () => {
 				const opponentResetSpy = sandbox.spy( game.opponent, 'reset' );
 				const randomSpy = sandbox.spy( game.player.battlefield, 'random' );
 
-				game.winner = 'someId';
+				game.winnerId = 'someId';
 
 				socketMock.emit( 'rematch' );
 
@@ -391,7 +376,7 @@ describe( 'Game', () => {
 				expect( opponentResetSpy.calledOnce ).to.true;
 				expect( randomSpy.calledOnce ).to.true;
 				expect( game.status ).to.equal( 'full' );
-				expect( game.winner ).to.equal( null );
+				expect( game.winnerId ).to.equal( null );
 			} );
 		} );
 
@@ -455,7 +440,7 @@ describe( 'Game', () => {
 			}, 0 );
 		} );
 
-		it( 'should over the game when server response with error', done => {
+		it( 'should over the game when socketGateway response with error', done => {
 			game.start().catch( error => {
 				expect( error ).to.equal( 'foo-bar' );
 				done();
@@ -516,7 +501,7 @@ describe( 'Game', () => {
 			} ).to.throw( Error, 'Invalid ships configuration.' );
 		} );
 
-		it( 'should send serialized ships to the server and mark player as ready', () => {
+		it( 'should send serialized ships to the socketGateway and mark player as ready', () => {
 			const emitSpy = sandbox.spy( socketMock, 'emit' );
 
 			game.player.isReady = false;
@@ -531,7 +516,7 @@ describe( 'Game', () => {
 			emitSpy.restore();
 		} );
 
-		it( 'should over the game when server response with error', done => {
+		it( 'should over the game when socketGateway response with error', done => {
 			game.player.isReady = false;
 			game.player.isInGame = true;
 
@@ -564,29 +549,29 @@ describe( 'Game', () => {
 		it( 'should throw an error when this is not player turn', () => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
-			game.activePlayer = 'opponentId';
+			game.activePlayerId = 'opponentId';
 
 			expect( () => {
 				game.shoot();
 			} ).to.throw( Error, 'Not your turn.' );
 		} );
 
-		it( 'should sent position to the server', () => {
+		it( 'should sent position to the socketGateway', () => {
 			const emitSpy = sandbox.spy( socketMock, 'emit' );
 
 			game.status = 'battle';
 			game.player.id = 'playerId';
-			game.activePlayer = 'playerId';
+			game.activePlayerId = 'playerId';
 
 			game.shoot( [ 1, 1 ] );
 
 			sinon.assert.calledWithExactly( emitSpy, 'shoot', [ 1, 1 ] );
 		} );
 
-		it( 'should mark field base on type returned by the server and set activePlayer', done => {
+		it( 'should mark field base on type returned by the socketGateway and set activePlayerId', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
-			game.activePlayer = 'playerId';
+			game.activePlayerId = 'playerId';
 
 			game.shoot( [ 1, 1 ] );
 
@@ -594,13 +579,13 @@ describe( 'Game', () => {
 				response: {
 					position: [ 1, 1 ],
 					type: 'missed',
-					activePlayer: 'opponentId'
+					activePlayerId: 'opponentId'
 				}
 			} );
 
 			setTimeout( () => {
 				expect( game.opponent.battlefield.getField( [ 1, 1 ] ).isMissed ).to.true;
-				expect( game.activePlayer ).to.equal( 'opponentId' );
+				expect( game.activePlayerId ).to.equal( 'opponentId' );
 				done();
 			}, 0 );
 		} );
@@ -608,7 +593,7 @@ describe( 'Game', () => {
 		it( 'should set ship on the battlefield when ship is destroyed', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
-			game.activePlayer = 'playerId';
+			game.activePlayerId = 'playerId';
 
 			game.shoot( [ 1, 1 ] );
 
@@ -639,7 +624,7 @@ describe( 'Game', () => {
 		it( 'should over the game when player won', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
-			game.activePlayer = 'playerId';
+			game.activePlayerId = 'playerId';
 
 			game.shoot( [ 1, 1 ] );
 
@@ -647,14 +632,14 @@ describe( 'Game', () => {
 				response: {
 					position: [ 1, 1 ],
 					type: 'hit',
-					winner: 'playerId'
+					winnerId: 'playerId'
 				}
 			} );
 
 			setTimeout( () => {
 				expect( game.status ).to.equal( 'over' );
-				expect( game.winner ).to.equal( 'playerId' );
-				expect( game.activePlayer ).to.null;
+				expect( game.winnerId ).to.equal( 'playerId' );
+				expect( game.activePlayerId ).to.null;
 				done();
 			}, 0 );
 		} );
