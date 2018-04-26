@@ -108,5 +108,17 @@ describe( '_utils', () => {
 				sinon.assert.calledWithExactly( expectedCallback, 'param1', 'param2' );
 			} );
 		} );
+
+		describe( 'broadcast()', () => {
+			it( 'should return a function', () => {
+				expect( socketMock.broadcast() ).to.be.a( 'function' );
+			} );
+		} );
+
+		describe( 'disconnect()', () => {
+			it( 'should be defined', () => {
+				expect( socketMock.disconnect ).to.be.a( 'function' );
+			} );
+		} );
 	} );
 } );

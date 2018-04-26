@@ -7,6 +7,8 @@ class SocketMock {
 		 * @type {Object}
 		 */
 		this._events = {};
+
+		this.broadcast = sinon.stub().returns( sinon.spy() );
 	}
 
 	/**
@@ -21,6 +23,13 @@ class SocketMock {
 		}
 
 		this._events[ event ].push( callback );
+	}
+
+	/**
+	 * @return {Function}
+	 */
+	broadcast() {
+		return () => {};
 	}
 
 	/**
