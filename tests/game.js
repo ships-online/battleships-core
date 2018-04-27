@@ -83,14 +83,6 @@ describe( 'Game', () => {
 			return Game.create( 'url' ).then( gameInstance => ( game = gameInstance ) );
 		} );
 
-		it( 'should return promise that returns game instance with default data', () => {
-			expect( game ).instanceof( Game );
-			expect( game.player.battlefield.settings ).to.deep.equal( {
-				size: 10,
-				shipsSchema: { 1: 4, 2: 3, 3: 2, 4: 1 }
-			} );
-		} );
-
 		it( 'should return promise that returns game instance with given data', () => {
 			return Game.create( 'url', { size: 5, shipsSchema: { 1: 1 } } ).then( game => {
 				expect( game ).instanceof( Game );
@@ -98,6 +90,14 @@ describe( 'Game', () => {
 					size: 5,
 					shipsSchema: { 1: 1 }
 				} );
+			} );
+		} );
+
+		it( 'should return promise that returns game instance with default data', () => {
+			expect( game ).instanceof( Game );
+			expect( game.player.battlefield.settings ).to.deep.equal( {
+				size: 10,
+				shipsSchema: { 1: 4, 2: 3, 3: 2, 4: 1 }
 			} );
 		} );
 
@@ -123,7 +123,7 @@ describe( 'Game', () => {
 				expect( game.gameId ).to.equal( 'gameId' );
 				expect( game.player.id ).to.equal( 'playerId' );
 				done();
-			}, 0 );
+			} );
 		} );
 
 		it( 'should set opponent into the game and change game status when opponent accept the game', done => {
@@ -141,8 +141,9 @@ describe( 'Game', () => {
 				expect( game.opponent.id ).to.equal( 'opponentId' );
 				expect( game.opponent.isInGame ).to.true;
 				expect( game.status ).to.equal( 'full' );
+
 				done();
-			}, 0 );
+			} );
 		} );
 	} );
 
@@ -613,12 +614,12 @@ describe( 'Game', () => {
 				expect( game.opponent.battlefield.getField( [ 1, 1 ] ).getFirstShip().toJSON() ).to.deep.equal( {
 					id: '1',
 					position: [ 1, 1 ],
-					tail: [ 1, 1 ],
 					length: 1,
 					isRotated: false
 				} );
+
 				done();
-			}, 0 );
+			} );
 		} );
 
 		it( 'should over the game when player won', done => {
