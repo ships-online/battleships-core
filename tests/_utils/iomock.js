@@ -7,8 +7,6 @@ class SocketMock {
 		 * @type {Object}
 		 */
 		this._events = {};
-
-		this.broadcast = sinon.stub().returns( sinon.spy() );
 	}
 
 	/**
