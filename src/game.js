@@ -3,7 +3,6 @@ import Player from './player';
 import PlayerBattlefield from 'battleships-engine/src/playerbattlefield';
 import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield';
 import Ship from 'battleships-engine/src/ship';
-import GameView from 'battleships-ui-vanilla/src/gameview';
 import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 import mix from '@ckeditor/ckeditor5-utils/src/mix';
 
@@ -33,13 +32,6 @@ export default class Game {
 		 * @type {Player}
 		 */
 		this.opponent = new Player( new OpponentBattlefield( size, shipsSchema ) );
-
-		/**
-		 * Game view.
-		 *
-		 * @type {GameView}
-		 */
-		this.view = new GameView( this );
 
 		/**
 		 * Id of player that has wont the game.
@@ -368,7 +360,6 @@ export default class Game {
 		this._serverErrorName = errorName;
 		this.destroy();
 		this[ _connection ].destroy();
-		this.view.destroy();
 	}
 }
 

@@ -19,8 +19,7 @@
   "license": "ISC",
   "dependencies": {
     "@ckeditor/ckeditor5-utils": "^1.0.0-alpha.1",
-    "battleships-engine": "https://github.com/ships-online/battleships-engine.git",
-    "battleships-ui-vanilla": "https://github.com/ships-online/battleships-ui-vanilla.git"
+    "battleships-engine": "https://github.com/ships-online/battleships-engine.git"
   },
   "devDependencies": {
     "battleships-dev-tools": "https://github.com/ships-online/battleships-dev-tools.git",

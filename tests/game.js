@@ -1,7 +1,6 @@
 import Game from '../src/game';
 import Player from '../src/player';
 import SocketGateway from '../src/socketgateway';
-import GameView from 'battleships-ui-vanilla/src/gameview';
 import { ioMock, socketMock } from './_utils/iomock';
 
 describe( 'Game', () => {
@@ -30,7 +29,6 @@ describe( 'Game', () => {
 			expect( game ).to.have.property( 'winnerId', null );
 			expect( game ).to.have.property( 'player' ).to.instanceof( Player );
 			expect( game ).to.have.property( 'opponent' ).to.instanceof( Player );
-			expect( game ).to.have.property( 'view' ).to.instanceof( GameView );
 
 			expect( game.player.battlefield ).to.have.property( 'size', 5 );
 			expect( game.player.battlefield ).to.have.property( 'shipsSchema' ).to.deep.equal( { 1: 2 } );
