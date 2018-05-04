@@ -122,7 +122,7 @@ export default class Game {
 	 * @returns {Promise} Promise that returns game instance on resolve.
 	 */
 	static create( webSocketUrl, settings ) {
-		const socketGateway = new SocketGateway( webSocketUrl );
+		const socketGateway = new SocketGateway();
 		const game = new Game( socketGateway, settings );
 
 		game.player.isInGame = true;
@@ -138,7 +138,7 @@ export default class Game {
 			game.status = 'full';
 		} );
 
-		socketGateway.create( game.player.battlefield.settings ).then( gameData => {
+		socketGateway.create( webSocketUrl, game.player.battlefield.settings ).then( gameData => {
 			game.gameId = gameData.gameId;
 			game.player.id = gameData.playerId;
 		} );
@@ -155,9 +155,9 @@ export default class Game {
 	 * @returns {Promise} Promise that returns game instance when on resolve and errorName on reject.
 	 */
 	static join( webSocketUrl, gameId ) {
-		const socketGateway = new SocketGateway( webSocketUrl );
+		const socketGateway = new SocketGateway();
 
-		return socketGateway.join( gameId ).then( gameData => {
+		return socketGateway.join( webSocketUrl, gameId ).then( gameData => {
 			const game = new Game( socketGateway, gameData.settings );
 
 			game.player.id = gameData.playerId;
