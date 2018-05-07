@@ -156,6 +156,8 @@ describe( 'Game', () => {
 					} );
 					expect( game.player.id ).to.equal( 'playerId' );
 					expect( game.opponent.id ).to.equal( 'opponentId' );
+					expect( game.opponent.isHost ).to.true;
+					expect( game.opponent.isInGame ).to.true;
 					expect( game.opponent.isReady ).to.true;
 					expect( game.interestedPlayersNumber ).to.equal( 10 );
 

@@ -162,6 +162,8 @@ export default class Game {
 
 			game.player.id = gameData.playerId;
 			game.opponent.id = gameData.opponentId;
+			game.opponent.isHost = true;
+			game.opponent.isInGame = true;
 			game.opponent.isReady = gameData.isOpponentReady;
 			game.interestedPlayersNumber = gameData.interestedPlayersNumber;
 			game.player.battlefield.random();
