@@ -1,5 +1,6 @@
 import Game from '../src/game';
 import Player from '../src/player';
+import Ship from 'battleships-engine/src/ship';
 import SocketGateway from '../src/socketgateway';
 import { ioMock, socketMock } from './_utils/iomock';
 
@@ -364,11 +365,12 @@ describe( 'Game', () => {
 		} );
 
 		describe( 'rematch', () => {
-			it( 'should change game status, reset both players and randomize player battlefield', () => {
+			it( 'should change game status, reset both players, randomize player battlefield and remove opponent ships', () => {
 				const playerResetSpy = sandbox.spy( game.player, 'reset' );
 				const opponentResetSpy = sandbox.spy( game.opponent, 'reset' );
 				const randomSpy = sandbox.spy( game.player.battlefield, 'random' );
 
+				game.opponent.battlefield.shipsCollection.add( new Ship( { id: '1', length: 2 } ) );
 				game.winnerId = 'someId';
 
 				socketMock.emit( 'rematch' );
@@ -376,6 +378,7 @@ describe( 'Game', () => {
 				expect( playerResetSpy.calledOnce ).to.true;
 				expect( opponentResetSpy.calledOnce ).to.true;
 				expect( randomSpy.calledOnce ).to.true;
+				expect( game.opponent.battlefield.shipsCollection ).to.length( 0 );
 				expect( game.status ).to.equal( 'full' );
 				expect( game.winnerId ).to.equal( null );
 			} );

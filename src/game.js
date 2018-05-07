@@ -341,6 +341,7 @@ export default class Game {
 		this.listenTo( this[ _connection ], 'rematch', () => {
 			this.status = 'full';
 			this.winnerId = null;
+			this.opponent.battlefield.shipsCollection.clear();
 			this.opponent.reset();
 			this.player.reset();
 			this.player.battlefield.random();
