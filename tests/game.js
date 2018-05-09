@@ -328,7 +328,7 @@ describe( 'Game', () => {
 				expect( game.activePlayerId ).to.equal( 'someId' );
 			} );
 
-			it( 'should over the game when one of the player has won', () => {
+			it( 'should over the game when one of the players has won', () => {
 				socketMock.emit( 'playerShoot', {
 					position: [ 2, 2 ],
 					type: 'hit',
@@ -338,6 +338,30 @@ describe( 'Game', () => {
 				expect( game.activePlayerId ).to.null;
 				expect( game.status ).to.equal( 'over' );
 				expect( game.winnerId ).to.equal( 'someId' );
+			} );
+
+			it( 'should display not sunken ships marked as collision in opponent battlefield when player has lost', () => {
+				game.opponent.id = 'someId';
+
+				game.opponent.battlefield.shipsCollection.add( new Ship( {
+					id: '1',
+					length: 1,
+					position: [ 0, 0 ]
+				} ) );
+
+				socketMock.emit( 'playerShoot', {
+					position: [ 0, 2 ],
+					type: 'hit',
+					winnerId: 'someId',
+					winnerShips: [ {
+						id: '2',
+						length: 1,
+						position: [ 0, 2 ]
+					} ]
+				} );
+
+				expect( Array.from( game.opponent.battlefield.shipsCollection, ship => ship.id ) ).to.members( [ '1', '2' ] );
+				expect( Array.from( game.opponent.battlefield.shipsCollection, ship => ship.isCollision ) ).to.members( [ false, true ] );
 			} );
 		} );
 
@@ -560,7 +584,7 @@ describe( 'Game', () => {
 			} ).to.throw( Error, 'Not your turn.' );
 		} );
 
-		it( 'should sent position to the socketGateway', () => {
+		it( 'should sent position through web socket', () => {
 			const emitSpy = sandbox.spy( socketMock, 'emit' );
 
 			game.status = 'battle';
@@ -572,7 +596,7 @@ describe( 'Game', () => {
 			sinon.assert.calledWithExactly( emitSpy, 'shoot', [ 1, 1 ] );
 		} );
 
-		it( 'should mark field base on type returned by the socketGateway and set activePlayerId', done => {
+		it( 'should mark field base on type returned by the web socket and set activePlayerId', done => {
 			game.status = 'battle';
 			game.player.id = 'playerId';
 			game.activePlayerId = 'playerId';

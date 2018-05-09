@@ -2,6 +2,7 @@ import SocketGateway from './socketgateway';
 import Player from './player';
 import PlayerBattlefield from 'battleships-engine/src/playerbattlefield';
 import OpponentBattlefield from 'battleships-engine/src/opponentbattlefield';
+import ShipsCollection from 'battleships-engine/src/shipscollection';
 import Ship from 'battleships-engine/src/ship';
 import ObservableMixin from '@ckeditor/ckeditor5-utils/src/observablemixin';
 import mix from '@ckeditor/ckeditor5-utils/src/mix';
@@ -323,6 +324,13 @@ export default class Game {
 				this.status = 'over';
 				this.activePlayerId = null;
 				this.winnerId = data.winnerId;
+
+				if ( this.opponent.id === data.winnerId ) {
+					const ships = ShipsCollection.createShipsFromJSON( data.winnerShips );
+
+					this.opponent.battlefield.shipsCollection.add( ships );
+					ships.forEach( ship => ( ship.isCollision = true ) );
+				}
 			} else {
 				this.activePlayerId = data.activePlayerId;
 			}
