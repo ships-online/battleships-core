@@ -108,7 +108,10 @@ export default class SocketGateway {
 
 	destroy() {
 		this.stopListening();
-		this[ _socket ].disconnect();
+
+		if ( this[ _socket ] ) {
+			this[ _socket ].disconnect();
+		}
 	}
 }
 

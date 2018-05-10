@@ -237,5 +237,11 @@ describe( 'SocketGateway', () => {
 
 			socketMock.emit( 'createResponse', { response: 'someId' } );
 		} );
+
+		it( 'should destroy before making connection without an error', () => {
+			expect( () => {
+				socketGateway.destroy();
+			} ).to.not.throw();
+		} );
 	} );
 } );
