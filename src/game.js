@@ -75,15 +75,6 @@ export default class Game {
 		this.set( 'activePlayerId', null );
 
 		/**
-		 * Stores server error as observable property to reject `#start()` promise when error occurs.
-		 *
-		 * @private
-		 * @observable
-		 * @type {String}
-		 */
-		this.set( '_serverErrorName', null );
-
-		/**
 		 * Server instance. Handles Client <-> Server communication.
 		 *
 		 * @private
@@ -170,22 +161,11 @@ export default class Game {
 			game.player.battlefield.random();
 
 			// One of the interested players have joined the game, so the game is over for the other interested players.
-			game.listenTo( socketGateway, 'interestedPlayerAccepted', () => game._finishGame( 'started' ) );
+			game.listenTo( socketGateway, 'interestedPlayerAccepted', () => game._handleServerError( 'started' ) );
 
 			game._listenToTheServerEvents();
 
 			return game;
-		} );
-	}
-
-	/**
-	 * Starts listen on errors from socket.
-	 *
-	 * @returns {Promise<null, error>} Promise that returns error on reject.
-	 */
-	start() {
-		return new Promise( ( resolve, reject ) => {
-			this.once( 'change:_serverErrorName', ( evt, name, value ) => reject( value ) );
 		} );
 	}
 
@@ -206,7 +186,7 @@ export default class Game {
 				this.player.isInGame = true;
 				this.status = 'full';
 			} )
-			.catch( error => this._finishGame( error ) );
+			.catch( error => this._handleServerError( error ) );
 	}
 
 	/**
@@ -229,7 +209,7 @@ export default class Game {
 
 		this.player.isReady = true;
 
-		this[ _connection ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._finishGame( error ) );
+		this[ _connection ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._handleServerError( error ) );
 	}
 
 	/**
@@ -280,6 +260,7 @@ export default class Game {
 	 */
 	destroy() {
 		this.stopListening();
+		this[ _connection ].destroy();
 	}
 
 	/**
@@ -356,21 +337,17 @@ export default class Game {
 		} );
 
 		// Game is over, one of the players left during the battle.
-		this.listenTo( this[ _connection ], 'gameOver', ( evt, data ) => {
-			this._finishGame( data );
-		} );
+		this.listenTo( this[ _connection ], 'gameOver', ( evt, data ) => this._handleServerError( data ) );
 	}
 
 	/**
-	 * Finishes the game by rejecting `start()` promise. This happens when server respond with error.
+	 * Fires error event when server response with an error.
 	 *
 	 * @private
 	 * @param {String} errorName Name of the error.
 	 */
-	_finishGame( errorName ) {
-		this._serverErrorName = errorName;
-		this.destroy();
-		this[ _connection ].destroy();
+	_handleServerError( errorName ) {
+		this.fire( 'error', errorName );
 	}
 }
 

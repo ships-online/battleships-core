@@ -200,13 +200,13 @@ describe( 'Game', () => {
 			}, 10 );
 		} );
 
-		it( 'should over the game when other player accepts the game', done => {
-			Game.join( 'gameId' )
-				.then( game => game.start() )
-				.catch( error => {
+		it( 'should fire error event when other player accepts the game', done => {
+			Game.join( 'url', 'gameId' ).then( game => {
+				game.on( 'error', ( evt, error ) => {
 					expect( error ).to.equal( 'started' );
 					done();
 				} );
+			} );
 
 			setTimeout( () => {
 				socketMock.emit( 'joinResponse', {
@@ -220,8 +220,8 @@ describe( 'Game', () => {
 
 				setTimeout( () => {
 					socketMock.emit( 'interestedPlayerAccepted' );
-				}, 10 );
-			}, 10 );
+				}, 5 );
+			}, 5 );
 		} );
 	} );
 
@@ -409,15 +409,15 @@ describe( 'Game', () => {
 		} );
 
 		describe( 'gameOver', () => {
-			it( 'should reject game promise', done => {
-				game.start().catch( error => {
+			it( 'should fire error event', done => {
+				game.on( 'error', ( evt, error ) => {
 					expect( error ).to.equal( 'foo-bar' );
 					done();
 				} );
 
 				setTimeout( () => {
 					socketMock.emit( 'gameOver', 'foo-bar' );
-				}, 0 );
+				} );
 			} );
 		} );
 	} );
@@ -469,7 +469,7 @@ describe( 'Game', () => {
 		} );
 
 		it( 'should over the game when socketGateway response with error', done => {
-			game.start().catch( error => {
+			game.on( 'error', ( evt, error ) => {
 				expect( error ).to.equal( 'foo-bar' );
 				done();
 			} );
@@ -548,7 +548,7 @@ describe( 'Game', () => {
 			game.player.isReady = false;
 			game.player.isInGame = true;
 
-			game.start().catch( error => {
+			game.on( 'error', ( evt, error ) => {
 				expect( error ).to.equal( 'foo-bar' );
 				done();
 			} );
