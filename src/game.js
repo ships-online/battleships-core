@@ -303,8 +303,8 @@ export default class Game {
 
 			if ( data.winnerId ) {
 				this.status = 'over';
-				this.activePlayerId = null;
 				this.winnerId = data.winnerId;
+				this.activePlayerId = null;
 
 				if ( this.opponent.id === data.winnerId ) {
 					const ships = ShipsCollection.createShipsFromJSON( data.winnerShips );
