@@ -34,6 +34,8 @@ export default class SocketGateway {
 		 * @type {socket}
 		 */
 		this[ _socket ] = null;
+
+		this._pendingRequests = new Set();
 	}
 
 	/**
@@ -86,7 +88,7 @@ export default class SocketGateway {
 	}
 
 	/**
-	 * Emits event to the socket server and waits for immediate response.
+	 * Emits event to the socket server and waits for the response.
 	 *
 	 * @param {String} eventName
 	 * @param {*|Array<*>} args Additional data.
@@ -103,6 +105,31 @@ export default class SocketGateway {
 			} );
 
 			this[ _socket ].emit( eventName, ...args );
+		} );
+	}
+
+	/**
+	 * Emits event to the socket server and waits for the response.
+	 * Works almost the same as #request but it prevents from sending
+	 * the same request when previous has not finished.
+	 *
+	 * @param {String} eventName
+	 * @param {*|Array<*>} args Additional data.
+	 * @returns {Promise<response, error>}
+	 */
+	singleRequest( eventName, ...args ) {
+		if ( this._pendingRequests.has( eventName ) ) {
+			console.warn( `Waiting for ${ eventName } response.` );
+
+			return;
+		}
+
+		this._pendingRequests.add( eventName );
+
+		return this.request( eventName, ...args ).then( response => {
+			this._pendingRequests.delete( eventName );
+
+			return response;
 		} );
 	}
 

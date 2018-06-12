@@ -181,7 +181,7 @@ export default class Game {
 			throw new Error( 'Not available.' );
 		}
 
-		this[ _connection ].request( 'accept' )
+		this[ _connection ].singleRequest( 'accept' )
 			.then( () => {
 				this.player.isInGame = true;
 				this.status = 'full';
@@ -209,7 +209,7 @@ export default class Game {
 
 		this.player.isReady = true;
 
-		this[ _connection ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._handleServerError( error ) );
+		this[ _connection ].singleRequest( 'ready', shipsCollection.toJSON() ).catch( error => this._handleServerError( error ) );
 	}
 
 	/**
@@ -226,7 +226,7 @@ export default class Game {
 			throw new Error( 'Not your turn.' );
 		}
 
-		this[ _connection ].request( 'shoot', position ).then( data => {
+		this[ _connection ].singleRequest( 'shoot', position ).then( data => {
 			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
@@ -252,7 +252,7 @@ export default class Game {
 		}
 
 		this.player.isWaitingForRematch = true;
-		this[ _connection ].request( 'requestRematch' );
+		this[ _connection ].singleRequest( 'requestRematch' );
 	}
 
 	/**
