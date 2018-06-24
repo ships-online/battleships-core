@@ -36,7 +36,7 @@ export default class Player {
 		 * Defines if player is in game (player can enter on game page but not join to the game).
 		 *
 		 * @observable
-		 * @type {Boolean}
+		 * @member {Boolean} #isInGame
 		 */
 		this.set( 'isInGame', false );
 
@@ -44,7 +44,7 @@ export default class Player {
 		 * Defines if player is ready (player has arranged his battlefield and is ready for the battle).
 		 *
 		 * @observable
-		 * @type {Boolean}
+		 * @member {Boolean} #isReady
 		 */
 		this.set( 'isReady', false );
 
@@ -52,7 +52,7 @@ export default class Player {
 		 * Defines if player requested rematch and is waiting for it.
 		 *
 		 * @observable
-		 * @type {Boolean}
+		 * @member {Boolean} #isWaitingForRematch
 		 */
 		this.set( 'isWaitingForRematch', false );
 

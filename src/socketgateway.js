@@ -35,6 +35,12 @@ export default class SocketGateway {
 		 */
 		this[ _socket ] = null;
 
+		/**
+		 * List of pending requests.
+		 *
+		 * @private
+		 * @type {Set}
+		 */
 		this._pendingRequests = new Set();
 	}
 
@@ -111,7 +117,7 @@ export default class SocketGateway {
 	/**
 	 * Emits event to the socket server and waits for the response.
 	 * Works almost the same as #request but it prevents from sending
-	 * the same request when previous has not finished.
+	 * the same request when previous one has not finished.
 	 *
 	 * @param {String} eventName
 	 * @param {*|Array<*>} args Additional data.
@@ -119,9 +125,7 @@ export default class SocketGateway {
 	 */
 	singleRequest( eventName, ...args ) {
 		if ( this._pendingRequests.has( eventName ) ) {
-			console.warn( `Waiting for ${ eventName } response.` );
-
-			return;
+			return Promise.reject( `Waiting for ${ eventName } response.` );
 		}
 
 		this._pendingRequests.add( eventName );
@@ -133,6 +137,9 @@ export default class SocketGateway {
 		} );
 	}
 
+	/**
+	 * Destroys the connection.
+	 */
 	destroy() {
 		this.stopListening();
 

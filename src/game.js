@@ -46,7 +46,7 @@ export default class Game {
 		 * Game id, used e.g. to create share url.
 		 *
 		 * @observable
-		 * @type {String}
+		 * @member {String} #gameId
 		 */
 		this.set( 'gameId', null );
 
@@ -54,7 +54,7 @@ export default class Game {
 		 * Number of interested players - players who have entered the invitation link.
 		 *
 		 * @observable
-		 * @type {Number}
+		 * @member {Number} #interestedPlayersNumber
 		 */
 		this.set( 'interestedPlayersNumber', 0 );
 
@@ -62,7 +62,7 @@ export default class Game {
 		 * Game status.
 		 *
 		 * @observable
-		 * @type {'available'|'full'|'battle'|'over'}
+		 * @member {'available'|'full'|'battle'|'over'} #status
 		 */
 		this.set( 'status', 'available' );
 
@@ -70,7 +70,7 @@ export default class Game {
 		 * Id of active player.
 		 *
 		 * @observable
-		 * @type {null|String}
+		 * @member {null|String} #activePlayerId
 		 */
 		this.set( 'activePlayerId', null );
 
