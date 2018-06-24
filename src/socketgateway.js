@@ -76,7 +76,7 @@ export default class SocketGateway {
 	 */
 	request( eventName, ...args ) {
 		return new Promise( ( resolve, reject ) => {
-			this[ _socket ].once( `${ eventName }Response`, ( data = {} ) => {
+			this[ _socket ].once( `response-${ eventName }`, ( data = {} ) => {
 				if ( data.error ) {
 					reject( data.error );
 				} else {
