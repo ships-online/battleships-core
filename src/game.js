@@ -114,7 +114,7 @@ export default class Game {
 	 * @returns {Promise} Promise that returns game instance on resolve.
 	 */
 	static create( webSocketUrl, settings ) {
-		const socketGateway = new SocketGateway();
+		const socketGateway = new SocketGateway( webSocketUrl );
 		const game = new Game( socketGateway, settings );
 
 		game.player.isInGame = true;
@@ -130,7 +130,7 @@ export default class Game {
 			game.status = 'full';
 		} );
 
-		socketGateway.create( webSocketUrl, game.player.battlefield.settings ).then( gameData => {
+		socketGateway.connect( game.player.battlefield.settings ).then( gameData => {
 			game.gameId = gameData.gameId;
 			game.player.id = gameData.playerId;
 		} );
@@ -147,9 +147,9 @@ export default class Game {
 	 * @returns {Promise} Promise that returns game instance when on resolve and errorName on reject.
 	 */
 	static join( webSocketUrl, gameId ) {
-		const socketGateway = new SocketGateway();
+		const socketGateway = new SocketGateway( webSocketUrl );
 
-		return socketGateway.join( webSocketUrl, gameId ).then( gameData => {
+		return socketGateway.connect( gameId ).then( gameData => {
 			const game = new Game( socketGateway, gameData.settings );
 
 			game.player.id = gameData.playerId;
@@ -181,7 +181,7 @@ export default class Game {
 			throw new Error( 'Not available.' );
 		}
 
-		this[ _connection ].singleRequest( 'accept' )
+		this[ _connection ].request( 'accept' )
 			.then( () => {
 				this.player.isInGame = true;
 				this.status = 'full';
@@ -209,7 +209,7 @@ export default class Game {
 
 		this.player.isReady = true;
 
-		this[ _connection ].singleRequest( 'ready', shipsCollection.toJSON() ).catch( error => this._handleServerError( error ) );
+		this[ _connection ].request( 'ready', shipsCollection.toJSON() ).catch( error => this._handleServerError( error ) );
 	}
 
 	/**
@@ -226,7 +226,7 @@ export default class Game {
 			throw new Error( 'Not your turn.' );
 		}
 
-		this[ _connection ].singleRequest( 'shoot', position ).then( data => {
+		this[ _connection ].request( 'shoot', position ).then( data => {
 			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
@@ -252,7 +252,7 @@ export default class Game {
 		}
 
 		this.player.isWaitingForRematch = true;
-		this[ _connection ].singleRequest( 'requestRematch' );
+		this[ _connection ].request( 'requestRematch' );
 	}
 
 	/**

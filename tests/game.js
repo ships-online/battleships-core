@@ -187,17 +187,15 @@ describe( 'Game', () => {
 		} );
 
 		it( 'should return promise which returns error on reject', done => {
-			Game.join( 'gameId' )
+			Game.join( 'url', 'gameId' )
 				.catch( error => {
 					expect( error ).to.equal( 'foo-bar' );
 					done();
 				} );
 
-			setTimeout( () => {
-				socketMock.emit( 'joinResponse', {
-					error: 'foo-bar'
-				} );
-			}, 10 );
+			socketMock.emit( 'joinResponse', {
+				error: 'foo-bar'
+			} );
 		} );
 
 		it( 'should fire error event when other player accepts the game', done => {
@@ -426,7 +424,7 @@ describe( 'Game', () => {
 		let game;
 
 		beforeEach( done => {
-			Game.join( 'gameId' ).then( instance => {
+			Game.join( 'url', 'gameId' ).then( instance => {
 				game = instance;
 				done();
 			} );
