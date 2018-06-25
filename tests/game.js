@@ -2,14 +2,14 @@ import Game from '../src/game';
 import Player from '../src/player';
 import Ship from 'battleships-engine/src/ship';
 import SocketGateway from '../src/socketgateway';
-import { ioMock, socketMock } from './_utils/iomock';
+import { socketMock } from './_utils/iomock';
 
 describe( 'Game', () => {
 	let socketGateway, game, sandbox;
 
 	beforeEach( () => {
 		sandbox = sinon.sandbox.create();
-		window.io = ioMock;
+		window.io = () => socketMock;
 
 		socketGateway = new SocketGateway();
 		game = new Game( socketGateway, { size: 5, shipsSchema: { 1: 2 } } );
@@ -82,6 +82,10 @@ describe( 'Game', () => {
 			return Game.create( 'url' ).then( gameInstance => ( game = gameInstance ) );
 		} );
 
+		afterEach( () => {
+			game.destroy();
+		} );
+
 		it( 'should return promise that returns game instance with given data', () => {
 			return Game.create( 'url', { size: 5, shipsSchema: { 1: 1 } } ).then( game => {
 				expect( game ).instanceof( Game );
@@ -89,6 +93,8 @@ describe( 'Game', () => {
 					size: 5,
 					shipsSchema: { 1: 1 }
 				} );
+
+				return game.destroy();
 			} );
 		} );
 
@@ -112,7 +118,7 @@ describe( 'Game', () => {
 			expect( game.gameId ).to.not.ok;
 			expect( game.player.id ).to.not.ok;
 
-			socketMock.emit( 'createResponse', { response: {
+			socketMock.emit( 'response-create', { response: {
 				gameId: 'gameId',
 				playerId: 'playerId'
 			} } );
@@ -126,7 +132,7 @@ describe( 'Game', () => {
 		} );
 
 		it( 'should set opponent into the game and change game status when opponent accept the game', done => {
-			socketMock.emit( 'createResponse', { response: {
+			socketMock.emit( 'response-create', { response: {
 				gameId: 'gameId',
 				playerId: 'playerId'
 			} } );
@@ -166,12 +172,14 @@ describe( 'Game', () => {
 						expect( ship.position ).to.not.deep.equal( [ null, null ] );
 					}
 
+					game.destroy();
+
 					done();
 				} )
 				.catch( done );
 
 			setTimeout( () => {
-				socketMock.emit( 'joinResponse', {
+				socketMock.emit( 'response-join', {
 					response: {
 						settings: {
 							size: 5,
@@ -193,7 +201,7 @@ describe( 'Game', () => {
 					done();
 				} );
 
-			socketMock.emit( 'joinResponse', {
+			socketMock.emit( 'response-join', {
 				error: 'foo-bar'
 			} );
 		} );
@@ -202,12 +210,13 @@ describe( 'Game', () => {
 			Game.join( 'url', 'gameId' ).then( game => {
 				game.on( 'error', ( evt, error ) => {
 					expect( error ).to.equal( 'started' );
+					game.destroy();
 					done();
 				} );
 			} );
 
 			setTimeout( () => {
-				socketMock.emit( 'joinResponse', {
+				socketMock.emit( 'response-join', {
 					response: {
 						settings: {
 							size: 5,
@@ -230,7 +239,7 @@ describe( 'Game', () => {
 			Game.create().then( instance => {
 				game = instance;
 
-				socketMock.emit( 'createResponse', { response: {
+				socketMock.emit( 'response-create', { response: {
 					gameId: 'gameId',
 					playerId: 'playerId'
 				} } );
@@ -238,6 +247,10 @@ describe( 'Game', () => {
 				// Promise is resolved in the next event loop.
 				setTimeout( done, 0 );
 			} );
+		} );
+
+		afterEach( () => {
+			game.destroy();
 		} );
 
 		describe( 'interestedPlayerJoined', () => {
@@ -429,7 +442,7 @@ describe( 'Game', () => {
 				done();
 			} );
 
-			socketMock.emit( 'joinResponse', {
+			socketMock.emit( 'response-join', {
 				response: {
 					settings: {}
 				}
@@ -457,7 +470,7 @@ describe( 'Game', () => {
 
 			game.accept();
 
-			socketMock.emit( 'acceptResponse' );
+			socketMock.emit( 'response-accept' );
 
 			setTimeout( () => {
 				expect( game.player.isInGame ).to.true;
@@ -474,7 +487,7 @@ describe( 'Game', () => {
 
 			game.accept();
 
-			socketMock.emit( 'acceptResponse', {
+			socketMock.emit( 'response-accept', {
 				error: 'foo-bar'
 			} );
 		} );
@@ -553,7 +566,7 @@ describe( 'Game', () => {
 
 			game.ready();
 
-			socketMock.emit( 'readyResponse', { error: 'foo-bar' } );
+			socketMock.emit( 'response-ready', { error: 'foo-bar' } );
 		} );
 	} );
 
@@ -601,7 +614,7 @@ describe( 'Game', () => {
 
 			game.shoot( [ 1, 1 ] );
 
-			socketMock.emit( 'shootResponse', {
+			socketMock.emit( 'response-shoot', {
 				response: {
 					position: [ 1, 1 ],
 					type: 'missed',
@@ -623,7 +636,7 @@ describe( 'Game', () => {
 
 			game.shoot( [ 1, 1 ] );
 
-			socketMock.emit( 'shootResponse', {
+			socketMock.emit( 'response-shoot', {
 				response: {
 					position: [ 1, 1 ],
 					type: 'hit',
@@ -654,7 +667,7 @@ describe( 'Game', () => {
 
 			game.shoot( [ 1, 1 ] );
 
-			socketMock.emit( 'shootResponse', {
+			socketMock.emit( 'response-shoot', {
 				response: {
 					position: [ 1, 1 ],
 					type: 'hit',

@@ -1,11 +1,7 @@
-import { ioMock, socketMock } from '../_utils/iomock';
+import { socketMock } from '../_utils/iomock';
 
 describe( '_utils', () => {
 	describe( 'IoMock', () => {
-		it( 'should return the same socket instance', () => {
-			expect( ioMock() ).to.equal( socketMock );
-		} );
-
 		describe( 'on()', () => {
 			it( 'should store event with a callback', () => {
 				const expectedEvent = 'someEvent';
@@ -109,9 +105,9 @@ describe( '_utils', () => {
 			} );
 		} );
 
-		describe( 'broadcast()', () => {
-			it( 'should return a function', () => {
-				expect( socketMock.broadcast() ).to.be.a( 'function' );
+		describe( 'broadcast', () => {
+			it( 'should return an object with to() method', () => {
+				expect( socketMock.broadcast ).to.have.property( 'to' ).to.be.a( 'function' );
 			} );
 		} );
 

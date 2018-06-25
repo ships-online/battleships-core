@@ -24,10 +24,12 @@ class SocketMock {
 	}
 
 	/**
-	 * @return {Function}
+	 * @return {Object}
 	 */
-	broadcast() {
-		return () => {};
+	get broadcast() {
+		return {
+			to: () => {}
+		};
 	}
 
 	/**
@@ -84,5 +86,8 @@ export const socketMock = socket;
 
 export function ioMock() {
 	socket._events = {};
-	return socket;
+
+	return {
+		on: ( evtName, callback ) => callback( socket )
+	};
 }

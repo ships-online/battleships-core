@@ -1,11 +1,11 @@
 import SocketGateway from '../src/socketgateway';
-import { ioMock, socketMock } from './_utils/iomock';
+import { socketMock } from './_utils/iomock';
 
 describe( 'SocketGateway', () => {
 	let socketGateway, emitSpy;
 
 	beforeEach( () => {
-		window.io = ioMock;
+		window.io = () => socketMock;
 		socketGateway = new SocketGateway( 'url' );
 		emitSpy = sinon.spy( socketMock, 'emit' );
 	} );
@@ -27,7 +27,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'createResponse', { response: 'someId' } );
+			socketMock.emit( 'response-create', { response: 'someId' } );
 		} );
 
 		it( 'should return promise and resolve with gameId when is is provided', done => {
@@ -41,7 +41,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'joinResponse', { response: 'someId' } );
+			socketMock.emit( 'response-join', { response: 'someId' } );
 		} );
 
 		it( 'should return promise and reject with error when settings are provided', done => {
@@ -55,7 +55,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'createResponse', { error: 'error' } );
+			socketMock.emit( 'response-create', { error: 'error' } );
 		} );
 
 		it( 'should return promise and reject with error when is is provided', done => {
@@ -69,7 +69,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'joinResponse', { error: 'error' } );
+			socketMock.emit( 'response-join', { error: 'error' } );
 		} );
 
 		it( 'should delegate socket events', done => {
@@ -106,7 +106,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'createResponse', { response: { foo: 'bar' } } );
+			socketMock.emit( 'response-create', { response: { foo: 'bar' } } );
 		} );
 	} );
 
@@ -116,7 +116,7 @@ describe( 'SocketGateway', () => {
 				emitSpy.reset();
 				done();
 			} );
-			socketMock.emit( 'createResponse', { response: 'someId' } );
+			socketMock.emit( 'response-create', { response: 'someId' } );
 		} );
 
 		it( 'should emit event to the socketGateway, return promise and resolve with response', done => {
@@ -133,7 +133,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'doSomethingResponse', { response: responseData } );
+			socketMock.emit( 'response-doSomething', { response: responseData } );
 		} );
 
 		it( 'should return promise and resolve when there is no response data', done => {
@@ -149,7 +149,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'doSomethingResponse' );
+			socketMock.emit( 'response-doSomething' );
 		} );
 
 		it( 'should emit event to the socketGateway, return promise and reject with error', done => {
@@ -166,7 +166,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'doSomethingResponse', { error } );
+			socketMock.emit( 'response-doSomething', { error } );
 		} );
 	} );
 
@@ -182,7 +182,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'createResponse', { response: 'someId' } );
+			socketMock.emit( 'response-create', { response: 'someId' } );
 		} );
 
 		it( 'should disconnect websocket', done => {
@@ -196,7 +196,7 @@ describe( 'SocketGateway', () => {
 				done();
 			} );
 
-			socketMock.emit( 'createResponse', { response: 'someId' } );
+			socketMock.emit( 'response-create', { response: 'someId' } );
 		} );
 
 		it( 'should destroy before making connection without an error', () => {
