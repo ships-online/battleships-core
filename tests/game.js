@@ -139,7 +139,7 @@ describe( 'Game', () => {
 
 			// Promise is resolved in the next event loop.
 			setTimeout( () => {
-				socketMock.emit( 'interestedPlayerAccepted', {
+				socketMock.emit( 'guestAccepted', {
 					id: 'opponentId'
 				} );
 
@@ -226,7 +226,7 @@ describe( 'Game', () => {
 				} );
 
 				setTimeout( () => {
-					socketMock.emit( 'interestedPlayerAccepted' );
+					socketMock.emit( 'guestAccepted' );
 				}, 5 );
 			}, 5 );
 		} );
@@ -253,9 +253,9 @@ describe( 'Game', () => {
 			game.destroy();
 		} );
 
-		describe( 'interestedPlayerJoined', () => {
+		describe( 'guestJoined', () => {
 			it( 'should update number of interested players', () => {
-				socketMock.emit( 'interestedPlayerJoined', {
+				socketMock.emit( 'guestJoined', {
 					guestsNumber: 10
 				} );
 

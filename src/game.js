@@ -51,7 +51,7 @@ export default class Game {
 		this.set( 'gameId', null );
 
 		/**
-		 * Number of interested players - players who have entered the invitation link.
+		 * Number of interested players - players that entered the invitation link.
 		 *
 		 * @observable
 		 * @member {Number} #guestsNumber
@@ -124,7 +124,7 @@ export default class Game {
 		game._listenToTheServerEvents();
 
 		// One of interested players have joined the game.
-		game.listenTo( game[ _connection ], 'interestedPlayerAccepted', ( evt, data ) => {
+		game.listenTo( game[ _connection ], 'guestAccepted', ( evt, data ) => {
 			game.opponent.id = data.id;
 			game.opponent.isInGame = true;
 			game.status = 'full';
@@ -161,7 +161,7 @@ export default class Game {
 			game.player.battlefield.random();
 
 			// One of the interested players have joined the game, so the game is over for the other interested players.
-			game.listenTo( socketGateway, 'interestedPlayerAccepted', () => game._handleServerError( 'started' ) );
+			game.listenTo( socketGateway, 'guestAccepted', () => game._handleServerError( 'started' ) );
 
 			game._listenToTheServerEvents();
 
@@ -271,7 +271,7 @@ export default class Game {
 	 */
 	_listenToTheServerEvents() {
 		// Player entered the game URL but does not accepted the game yet.
-		this.listenTo( this[ _connection ], 'interestedPlayerJoined', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'guestJoined', ( evt, data ) => {
 			this.guestsNumber = data.guestsNumber;
 		} );
 

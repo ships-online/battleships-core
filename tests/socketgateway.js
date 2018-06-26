@@ -76,8 +76,8 @@ describe( 'SocketGateway', () => {
 			socketGateway.connect( { foo: 'bar' } ).then( () => {
 				const spy = sinon.spy();
 
-				socketGateway.on( 'interestedPlayerJoined', spy );
-				socketGateway.on( 'interestedPlayerAccepted', spy );
+				socketGateway.on( 'guestJoined', spy );
+				socketGateway.on( 'guestAccepted', spy );
 				socketGateway.on( 'playerLeft', spy );
 				socketGateway.on( 'playerReady', spy );
 				socketGateway.on( 'playerShoot', spy );
@@ -86,8 +86,8 @@ describe( 'SocketGateway', () => {
 				socketGateway.on( 'gameOver', spy );
 				socketGateway.on( 'rematch', spy );
 
-				socketMock.emit( 'interestedPlayerJoined' );
-				socketMock.emit( 'interestedPlayerAccepted' );
+				socketMock.emit( 'guestJoined' );
+				socketMock.emit( 'guestAccepted' );
 				socketMock.emit( 'playerLeft' );
 				socketMock.emit( 'playerReady' );
 				socketMock.emit( 'playerShoot' );

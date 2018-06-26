@@ -9,8 +9,8 @@ const _socket = Symbol( 'socket' );
  * This events will be delegates to SocketGateway class from the socket instance.
  */
 const eventsToDelegate = [
-	'interestedPlayerJoined',
-	'interestedPlayerAccepted',
+	'guestJoined',
+	'guestAccepted',
 	'playerLeft',
 	'playerReady',
 	'playerShoot',
