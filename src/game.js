@@ -54,9 +54,9 @@ export default class Game {
 		 * Number of interested players - players who have entered the invitation link.
 		 *
 		 * @observable
-		 * @member {Number} #interestedPlayersNumber
+		 * @member {Number} #guestsNumber
 		 */
-		this.set( 'interestedPlayersNumber', 0 );
+		this.set( 'guestsNumber', 0 );
 
 		/**
 		 * Game status.
@@ -157,7 +157,7 @@ export default class Game {
 			game.opponent.isHost = true;
 			game.opponent.isInGame = true;
 			game.opponent.isReady = gameData.isOpponentReady;
-			game.interestedPlayersNumber = gameData.interestedPlayersNumber;
+			game.guestsNumber = gameData.guestsNumber;
 			game.player.battlefield.random();
 
 			// One of the interested players have joined the game, so the game is over for the other interested players.
@@ -272,7 +272,7 @@ export default class Game {
 	_listenToTheServerEvents() {
 		// Player enter on the game URL but not accept the game yet.
 		this.listenTo( this[ _connection ], 'interestedPlayerJoined', ( evt, data ) => {
-			this.interestedPlayersNumber = data.interestedPlayersNumber;
+			this.guestsNumber = data.guestsNumber;
 		} );
 
 		// Player left the game before the battle start.
@@ -284,7 +284,7 @@ export default class Game {
 				this.status = 'available';
 			}
 
-			this.interestedPlayersNumber = data.interestedPlayersNumber;
+			this.guestsNumber = data.guestsNumber;
 		} );
 
 		// Player is ready for the battle.

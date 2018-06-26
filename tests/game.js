@@ -24,7 +24,7 @@ describe( 'Game', () => {
 	describe( 'constructor()', () => {
 		it( 'should create an Game instance with given data', () => {
 			expect( game ).to.have.property( 'gameId', null );
-			expect( game ).to.have.property( 'interestedPlayersNumber', 0 );
+			expect( game ).to.have.property( 'guestsNumber', 0 );
 			expect( game ).to.have.property( 'status', 'available' );
 			expect( game ).to.have.property( 'activePlayerId', null );
 			expect( game ).to.have.property( 'winnerId', null );
@@ -166,7 +166,7 @@ describe( 'Game', () => {
 					expect( game.opponent.isHost ).to.true;
 					expect( game.opponent.isInGame ).to.true;
 					expect( game.opponent.isReady ).to.true;
-					expect( game.interestedPlayersNumber ).to.equal( 10 );
+					expect( game.guestsNumber ).to.equal( 10 );
 
 					for ( const ship of game.player.battlefield.shipsCollection ) {
 						expect( ship.position ).to.not.deep.equal( [ null, null ] );
@@ -188,7 +188,7 @@ describe( 'Game', () => {
 						playerId: 'playerId',
 						opponentId: 'opponentId',
 						isOpponentReady: true,
-						interestedPlayersNumber: 10
+						guestsNumber: 10
 					}
 				} );
 			}, 10 );
@@ -256,21 +256,21 @@ describe( 'Game', () => {
 		describe( 'interestedPlayerJoined', () => {
 			it( 'should update number of interested players', () => {
 				socketMock.emit( 'interestedPlayerJoined', {
-					interestedPlayersNumber: 10
+					guestsNumber: 10
 				} );
 
-				expect( game.interestedPlayersNumber ).to.equal( 10 );
+				expect( game.guestsNumber ).to.equal( 10 );
 			} );
 		} );
 
 		describe( 'playerLeft', () => {
 			it( 'should update number of interested players', () => {
 				socketMock.emit( 'playerLeft', {
-					interestedPlayersNumber: 10,
+					guestsNumber: 10,
 					opponentId: 'someId'
 				} );
 
-				expect( game.interestedPlayersNumber ).to.equal( 10 );
+				expect( game.guestsNumber ).to.equal( 10 );
 			} );
 
 			it( 'should reset game game status and opponent data when opponent has accepted the game and left', () => {
@@ -280,7 +280,7 @@ describe( 'Game', () => {
 				game.status = 'full';
 
 				socketMock.emit( 'playerLeft', {
-					interestedPlayersNumber: 10,
+					guestsNumber: 10,
 					opponentId: 'opponentId'
 				} );
 
