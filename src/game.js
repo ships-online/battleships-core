@@ -270,12 +270,12 @@ export default class Game {
 	 * @private
 	 */
 	_listenToTheServerEvents() {
-		// Player enter on the game URL but not accept the game yet.
+		// Player entered the game URL but does not accepted the game yet.
 		this.listenTo( this[ _connection ], 'interestedPlayerJoined', ( evt, data ) => {
 			this.guestsNumber = data.guestsNumber;
 		} );
 
-		// Player left the game before the battle start.
+		// Player left the game before the battle has started.
 		this.listenTo( this[ _connection ], 'playerLeft', ( event, data ) => {
 			if ( data.opponentId == this.opponent.id ) {
 				this.opponent.id = null;
@@ -318,7 +318,7 @@ export default class Game {
 			}
 		} );
 
-		// One of the players requested rematch.
+		// One of the players requested a rematch.
 		this.listenTo( this[ _connection ], 'playerRequestRematch', ( evt, data ) => {
 			if ( this.player.id == data.playerId ) {
 				this.player.isWaitingForRematch = true;
@@ -327,7 +327,7 @@ export default class Game {
 			}
 		} );
 
-		// Both players requested rematch.
+		// Both players requested a rematch.
 		this.listenTo( this[ _connection ], 'rematch', () => {
 			this.status = 'full';
 			this.winnerId = null;
