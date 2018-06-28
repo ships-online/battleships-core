@@ -219,7 +219,7 @@ export default class Game {
 		} );
 
 		// Opponent is ready for the battle.
-		this.listenTo( this[ _connection ], 'playerReady', () => {
+		this.listenTo( this[ _connection ], 'opponentReady', () => {
 			this.opponent.isReady = true;
 		} );
 
@@ -230,7 +230,7 @@ export default class Game {
 		} );
 
 		// Opponent shot.
-		this.listenTo( this[ _connection ], 'playerShoot', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'opponentShoot', ( evt, data ) => {
 			this.player.battlefield.markAs( data.position, data.type );
 
 			if ( data.winnerId ) {
@@ -241,7 +241,7 @@ export default class Game {
 		} );
 
 		// Opponent has requested a rematch.
-		this.listenTo( this[ _connection ], 'playerRequestRematch', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'opponentRequestRematch', ( evt, data ) => {
 			if ( this.player.id == data.playerId ) {
 				this.player.isWaitingForRematch = true;
 			} else {

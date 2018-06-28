@@ -291,9 +291,9 @@ describe( 'Game', () => {
 			} );
 		} );
 
-		describe( 'playerReady', () => {
+		describe( 'opponentReady', () => {
 			it( 'should mark opponent as ready', () => {
-				socketMock.emit( 'playerReady' );
+				socketMock.emit( 'opponentReady' );
 
 				expect( game.opponent.isReady ).to.true;
 			} );
@@ -310,9 +310,9 @@ describe( 'Game', () => {
 			} );
 		} );
 
-		describe( 'playerShoot', () => {
+		describe( 'opponentShoot', () => {
 			it( 'should mark given field as hit', () => {
-				socketMock.emit( 'playerShoot', {
+				socketMock.emit( 'opponentShoot', {
 					position: [ 2, 2 ],
 					type: 'hit'
 				} );
@@ -321,7 +321,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should mark given field as missed', () => {
-				socketMock.emit( 'playerShoot', {
+				socketMock.emit( 'opponentShoot', {
 					position: [ 2, 2 ],
 					type: 'missed'
 				} );
@@ -330,7 +330,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should set active player', () => {
-				socketMock.emit( 'playerShoot', {
+				socketMock.emit( 'opponentShoot', {
 					position: [ 2, 2 ],
 					type: 'missed',
 					activePlayerId: 'someId'
@@ -340,7 +340,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should over the game when one of the players has won', () => {
-				socketMock.emit( 'playerShoot', {
+				socketMock.emit( 'opponentShoot', {
 					position: [ 2, 2 ],
 					type: 'hit',
 					winnerId: 'someId'
@@ -360,7 +360,7 @@ describe( 'Game', () => {
 					position: [ 0, 0 ]
 				} ) );
 
-				socketMock.emit( 'playerShoot', {
+				socketMock.emit( 'opponentShoot', {
 					position: [ 0, 2 ],
 					type: 'hit',
 					winnerId: 'someId',
@@ -376,14 +376,14 @@ describe( 'Game', () => {
 			} );
 		} );
 
-		describe( 'playerRequestRematch', () => {
+		describe( 'opponentRequestRematch', () => {
 			beforeEach( () => {
 				game.player.id = 'someId';
 				game.opponent.id = 'otherId';
 			} );
 
 			it( 'should set player as waiting for the rematch', () => {
-				socketMock.emit( 'playerRequestRematch', {
+				socketMock.emit( 'opponentRequestRematch', {
 					playerId: 'someId'
 				} );
 
@@ -391,7 +391,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should set opponent as waiting for the rematch', () => {
-				socketMock.emit( 'playerRequestRematch', {
+				socketMock.emit( 'opponentRequestRematch', {
 					playerId: 'otherId'
 				} );
 

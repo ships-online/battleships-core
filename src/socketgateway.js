@@ -12,9 +12,9 @@ const eventsToDelegate = [
 	'guestJoined',
 	'guestAccepted',
 	'playerLeft',
-	'playerReady',
-	'playerShoot',
-	'playerRequestRematch',
+	'opponentReady',
+	'opponentShoot',
+	'opponentRequestRematch',
 	'battleStarted',
 	'gameOver',
 	'rematch'

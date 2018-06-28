@@ -79,9 +79,9 @@ describe( 'SocketGateway', () => {
 				socketGateway.on( 'guestJoined', spy );
 				socketGateway.on( 'guestAccepted', spy );
 				socketGateway.on( 'playerLeft', spy );
-				socketGateway.on( 'playerReady', spy );
-				socketGateway.on( 'playerShoot', spy );
-				socketGateway.on( 'playerRequestRematch', spy );
+				socketGateway.on( 'opponentReady', spy );
+				socketGateway.on( 'opponentShoot', spy );
+				socketGateway.on( 'opponentRequestRematch', spy );
 				socketGateway.on( 'battleStarted', spy );
 				socketGateway.on( 'gameOver', spy );
 				socketGateway.on( 'rematch', spy );
@@ -89,9 +89,9 @@ describe( 'SocketGateway', () => {
 				socketMock.emit( 'guestJoined' );
 				socketMock.emit( 'guestAccepted' );
 				socketMock.emit( 'playerLeft' );
-				socketMock.emit( 'playerReady' );
-				socketMock.emit( 'playerShoot' );
-				socketMock.emit( 'playerRequestRematch' );
+				socketMock.emit( 'opponentReady' );
+				socketMock.emit( 'opponentShoot' );
+				socketMock.emit( 'opponentRequestRematch' );
 				socketMock.emit( 'battleStarted' );
 				socketMock.emit( 'gameOver' );
 				socketMock.emit( 'rematch' );
