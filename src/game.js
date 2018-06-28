@@ -104,75 +104,6 @@ export default class Game {
 	}
 
 	/**
-	 * Creates the new game and sets the initial states.
-	 *
-	 * @static
-	 * @param {String} webSocketUrl Socket url.
-	 * @param {Object} [settings={}] Game settings.
-	 * @param {Number} [settings.size=10] Size of the battlefield. How many fields width and height will be battlefield.
-	 * @param {Object} [settings.shipsSchema={4:4,3:2,2:3,1:4}] Defines how many ships of specified types will be in the game.
-	 * @returns {Promise} Promise that returns game instance on resolve.
-	 */
-	static create( webSocketUrl, settings ) {
-		const socketGateway = new SocketGateway( webSocketUrl );
-		const game = new Game( socketGateway, settings );
-
-		game.player.isInGame = true;
-		game.player.isHost = true;
-		game.player.battlefield.random();
-
-		game._listenToTheServerEvents();
-
-		// One of guests have joined the game.
-		game.listenTo( game[ _connection ], 'guestAccepted', ( evt, data ) => {
-			game.opponent.id = data.id;
-			game.opponent.isInGame = true;
-			game.status = 'full';
-		} );
-
-		// Connect player to the server.
-		socketGateway.connect( game.player.battlefield.settings ).then( gameData => {
-			game.gameId = gameData.gameId;
-			game.player.id = gameData.playerId;
-		} );
-
-		return Promise.resolve( game );
-	}
-
-	/**
-	 * Joins the game of the given id and sets the initial states.
-	 *
-	 * @static
-	 * @param {String} webSocketUrl Socket url.
-	 * @param {String} gameId Id of the game you want to join.
-	 * @returns {Promise} Promise that returns game instance when on resolve and errorName on reject.
-	 */
-	static join( webSocketUrl, gameId ) {
-		const socketGateway = new SocketGateway( webSocketUrl );
-
-		return socketGateway.connect( gameId ).then( gameData => {
-			const game = new Game( socketGateway, gameData.settings );
-
-			game.guestsNumber = gameData.guestsNumber;
-
-			game.player.id = gameData.playerId;
-			game.player.battlefield.random();
-
-			game.opponent.id = gameData.opponentId;
-			game.opponent.isHost = true;
-			game.opponent.isInGame = true;
-			game.opponent.isReady = gameData.isOpponentReady;
-
-			// One of the guests have joined the game, so the game is over for the other guests.
-			game.listenTo( socketGateway, 'guestAccepted', () => game._handleServerError( 'started' ) );
-
-			game._listenToTheServerEvents();
-
-			return game;
-		} );
-	}
-
-	/**
 	 * Joins the battle.
 	 */
 	accept() {
@@ -364,6 +295,75 @@ export default class Game {
 	 */
 	_handleServerError( errorName ) {
 		this.fire( 'error', errorName );
+	}
+
+	/**
+	 * Creates the new game and sets the initial states.
+	 *
+	 * @static
+	 * @param {String} webSocketUrl Socket url.
+	 * @param {Object} [settings={}] Game settings.
+	 * @param {Number} [settings.size=10] Size of the battlefield. How many fields width and height will be battlefield.
+	 * @param {Object} [settings.shipsSchema={4:4,3:2,2:3,1:4}] Defines how many ships of specified types will be in the game.
+	 * @returns {Promise} Promise that returns game instance on resolve.
+	 */
+	static create( webSocketUrl, settings ) {
+		const socketGateway = new SocketGateway( webSocketUrl );
+		const game = new Game( socketGateway, settings );
+
+		game.player.isInGame = true;
+		game.player.isHost = true;
+		game.player.battlefield.random();
+
+		game._listenToTheServerEvents();
+
+		// One of guests have joined the game.
+		game.listenTo( game[ _connection ], 'guestAccepted', ( evt, data ) => {
+			game.opponent.id = data.id;
+			game.opponent.isInGame = true;
+			game.status = 'full';
+		} );
+
+		// Connect player to the server.
+		socketGateway.connect( game.player.battlefield.settings ).then( gameData => {
+			game.gameId = gameData.gameId;
+			game.player.id = gameData.playerId;
+		} );
+
+		return Promise.resolve( game );
+	}
+
+	/**
+	 * Joins the game of the given id and sets the initial states.
+	 *
+	 * @static
+	 * @param {String} webSocketUrl Socket url.
+	 * @param {String} gameId Id of the game you want to join.
+	 * @returns {Promise} Promise that returns game instance when on resolve and errorName on reject.
+	 */
+	static join( webSocketUrl, gameId ) {
+		const socketGateway = new SocketGateway( webSocketUrl );
+
+		return socketGateway.connect( gameId ).then( gameData => {
+			const game = new Game( socketGateway, gameData.settings );
+
+			game.guestsNumber = gameData.guestsNumber;
+
+			game.player.id = gameData.playerId;
+			game.player.battlefield.random();
+
+			game.opponent.id = gameData.opponentId;
+			game.opponent.isHost = true;
+			game.opponent.isInGame = true;
+			game.opponent.isReady = gameData.isOpponentReady;
+
+			// One of the guests have joined the game, so the game is over for the other guests.
+			game.listenTo( socketGateway, 'guestAccepted', () => game._handleServerError( 'started' ) );
+
+			game._listenToTheServerEvents();
+
+			return game;
+		} );
 	}
 }
 
