@@ -33,17 +33,16 @@ describe( 'Player', () => {
 	} );
 
 	describe( 'reset()', () => {
-		it( 'should reset player to default values', () => {
-			const spy = sinon.spy( battlefield, 'reset' );
-
+		it( 'should reset player to default values but keep player in the game', () => {
 			player.isReady = true;
 			player.isWaitingForRematch = true;
+			player.isInGame = true;
 
 			player.reset();
 
 			expect( player.isReady ).to.false;
 			expect( player.isWaitingForRematch ).to.false;
-			expect( spy.calledOnce ).to.true;
+			expect( player.isInGame ).to.true;
 		} );
 	} );
 } );

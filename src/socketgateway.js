@@ -38,8 +38,8 @@ export default class SocketGateway {
 		/**
 		 * Socket url.
 		 *
+		 * @protected
 		 * @type {String}
-		 * @private
 		 */
 		this._webSocketUrl = webSocketUrl;
 	}
@@ -48,14 +48,16 @@ export default class SocketGateway {
 	 * Connects to the socket server and creates or joins the game on the server side.
 	 *
 	 * @param {String|Object} idOrSettings Game id or settings.
+	 * @param {Object} [options={}] Additional options.
+	 * @param {Boolean} [options.ai=false] Defines whether the connection is created for the human player or for the AI.
 	 * @returns {Promise<String>} Promise that returns gameId when is resolved.
 	 */
-	connect( idOrSettings ) {
+	connect( idOrSettings, options = {} ) {
 		return new Promise( ( resolve, reject ) => {
 			this[ _socket ] = io( this._webSocketUrl );
 			const action = typeof idOrSettings === 'string' ? 'join' : 'create';
 
-			this.request( action, idOrSettings )
+			this.request( action, idOrSettings, options )
 				.then( response => {
 					eventsToDelegate.forEach( name => {
 						this[ _socket ].on( name, data => this.fire( name, data ) );

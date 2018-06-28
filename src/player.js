@@ -33,7 +33,7 @@ export default class Player {
 		this.isHost = false;
 
 		/**
-		 * Defines if player is in game (player can enter on game page but not join to the game).
+		 * Defines if player is in game (player that enter the invite page is a guest until does not accept the game).
 		 *
 		 * @observable
 		 * @member {Boolean} #isInGame
@@ -41,7 +41,7 @@ export default class Player {
 		this.set( 'isInGame', false );
 
 		/**
-		 * Defines if player is ready (player has arranged his battlefield and is ready for the battle).
+		 * Defines if player is ready (player has arranged his ships and is ready for the battle).
 		 *
 		 * @observable
 		 * @member {Boolean} #isReady
@@ -49,24 +49,32 @@ export default class Player {
 		this.set( 'isReady', false );
 
 		/**
-		 * Defines if player requested rematch and is waiting for it.
+		 * Defines if player requested a rematch.
 		 *
 		 * @observable
 		 * @member {Boolean} #isWaitingForRematch
 		 */
 		this.set( 'isWaitingForRematch', false );
 
-		// Lock battlefield when player is ready (can't rearrange ships).
+		// Lock the battlefield when player is ready (can't rearrange ships).
 		this.battlefield.bind( 'isLocked' ).to( this, 'isReady' );
 	}
 
 	/**
-	 * Resets player data to default values.
+	 * Resets player data to the default values but keeps player in the game.
 	 */
 	reset() {
-		this.battlefield.reset();
 		this.isReady = false;
 		this.isWaitingForRematch = false;
+	}
+
+	/**
+	 * Resets player data after player quit the game.
+	 */
+	quit() {
+		this.reset();
+		this.id = null;
+		this.isInGame = false;
 	}
 }
 
