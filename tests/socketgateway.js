@@ -80,7 +80,7 @@ describe( 'SocketGateway', () => {
 				socketGateway.on( 'guestAccepted', spy );
 				socketGateway.on( 'playerLeft', spy );
 				socketGateway.on( 'opponentReady', spy );
-				socketGateway.on( 'opponentShoot', spy );
+				socketGateway.on( 'opponentShot', spy );
 				socketGateway.on( 'opponentRequestRematch', spy );
 				socketGateway.on( 'battleStarted', spy );
 				socketGateway.on( 'gameOver', spy );
@@ -90,7 +90,7 @@ describe( 'SocketGateway', () => {
 				socketMock.emit( 'guestAccepted' );
 				socketMock.emit( 'playerLeft' );
 				socketMock.emit( 'opponentReady' );
-				socketMock.emit( 'opponentShoot' );
+				socketMock.emit( 'opponentShot' );
 				socketMock.emit( 'opponentRequestRematch' );
 				socketMock.emit( 'battleStarted' );
 				socketMock.emit( 'gameOver' );

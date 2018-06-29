@@ -310,9 +310,9 @@ describe( 'Game', () => {
 			} );
 		} );
 
-		describe( 'opponentShoot', () => {
+		describe( 'opponentShot', () => {
 			it( 'should mark given field as hit', () => {
-				socketMock.emit( 'opponentShoot', {
+				socketMock.emit( 'opponentShot', {
 					position: [ 2, 2 ],
 					type: 'hit'
 				} );
@@ -321,7 +321,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should mark given field as missed', () => {
-				socketMock.emit( 'opponentShoot', {
+				socketMock.emit( 'opponentShot', {
 					position: [ 2, 2 ],
 					type: 'missed'
 				} );
@@ -330,7 +330,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should set active player', () => {
-				socketMock.emit( 'opponentShoot', {
+				socketMock.emit( 'opponentShot', {
 					position: [ 2, 2 ],
 					type: 'missed',
 					activePlayerId: 'someId'
@@ -340,7 +340,7 @@ describe( 'Game', () => {
 			} );
 
 			it( 'should over the game when one of the players has won', () => {
-				socketMock.emit( 'opponentShoot', {
+				socketMock.emit( 'opponentShot', {
 					position: [ 2, 2 ],
 					type: 'hit',
 					winnerId: 'someId'
@@ -360,7 +360,7 @@ describe( 'Game', () => {
 					position: [ 0, 0 ]
 				} ) );
 
-				socketMock.emit( 'opponentShoot', {
+				socketMock.emit( 'opponentShot', {
 					position: [ 0, 2 ],
 					type: 'hit',
 					winnerId: 'someId',
@@ -570,7 +570,7 @@ describe( 'Game', () => {
 		} );
 	} );
 
-	describe( 'shoot()', () => {
+	describe( 'shot()', () => {
 		let game;
 
 		beforeEach( () => {
@@ -581,7 +581,7 @@ describe( 'Game', () => {
 			game.status = 'available';
 
 			expect( () => {
-				game.shoot();
+				game.shot();
 			} ).to.throw( Error, 'Invalid game status.' );
 		} );
 
@@ -591,7 +591,7 @@ describe( 'Game', () => {
 			game.activePlayerId = 'opponentId';
 
 			expect( () => {
-				game.shoot();
+				game.shot();
 			} ).to.throw( Error, 'Not your turn.' );
 		} );
 
@@ -602,9 +602,9 @@ describe( 'Game', () => {
 			game.player.id = 'playerId';
 			game.activePlayerId = 'playerId';
 
-			game.shoot( [ 1, 1 ] );
+			game.shot( [ 1, 1 ] );
 
-			sinon.assert.calledWithExactly( emitSpy, 'shoot', [ 1, 1 ] );
+			sinon.assert.calledWithExactly( emitSpy, 'shot', [ 1, 1 ] );
 		} );
 
 		it( 'should mark field base on type returned by the web socket and set activePlayerId', done => {
@@ -612,9 +612,9 @@ describe( 'Game', () => {
 			game.player.id = 'playerId';
 			game.activePlayerId = 'playerId';
 
-			game.shoot( [ 1, 1 ] );
+			game.shot( [ 1, 1 ] );
 
-			socketMock.emit( 'response-shoot', {
+			socketMock.emit( 'response-shot', {
 				response: {
 					position: [ 1, 1 ],
 					type: 'missed',
@@ -634,9 +634,9 @@ describe( 'Game', () => {
 			game.player.id = 'playerId';
 			game.activePlayerId = 'playerId';
 
-			game.shoot( [ 1, 1 ] );
+			game.shot( [ 1, 1 ] );
 
-			socketMock.emit( 'response-shoot', {
+			socketMock.emit( 'response-shot', {
 				response: {
 					position: [ 1, 1 ],
 					type: 'hit',
@@ -665,9 +665,9 @@ describe( 'Game', () => {
 			game.player.id = 'playerId';
 			game.activePlayerId = 'playerId';
 
-			game.shoot( [ 1, 1 ] );
+			game.shot( [ 1, 1 ] );
 
-			socketMock.emit( 'response-shoot', {
+			socketMock.emit( 'response-shot', {
 				response: {
 					position: [ 1, 1 ],
 					type: 'hit',

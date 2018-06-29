@@ -153,7 +153,7 @@ export default class Game {
 	 * @param {Array<Number, Number>} position Position on the battlefield.
 	 * @returns {Promise} Promise resolved when the request is finished.
 	 */
-	shoot( position ) {
+	shot( position ) {
 		if ( this.status != 'battle' ) {
 			throw new Error( 'Invalid game status.' );
 		}
@@ -162,7 +162,7 @@ export default class Game {
 			throw new Error( 'Not your turn.' );
 		}
 
-		return this[ _connection ].request( 'shoot', position ).then( data => {
+		return this[ _connection ].request( 'shot', position ).then( data => {
 			this.opponent.battlefield.markAs( data.position, data.type );
 
 			if ( data.sunk ) {
@@ -230,7 +230,7 @@ export default class Game {
 		} );
 
 		// Opponent shot.
-		this.listenTo( this[ _connection ], 'opponentShoot', ( evt, data ) => {
+		this.listenTo( this[ _connection ], 'opponentShot', ( evt, data ) => {
 			this.player.battlefield.markAs( data.position, data.type );
 
 			if ( data.winnerId ) {
