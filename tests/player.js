@@ -5,7 +5,7 @@ describe( 'Player', () => {
 	let player, battlefield;
 
 	beforeEach( () => {
-		battlefield = new Battlefield( 10, { 2: 1 } );
+		battlefield = new Battlefield();
 		player = new Player( battlefield );
 	} );
 
@@ -43,6 +43,32 @@ describe( 'Player', () => {
 			expect( player.isReady ).to.false;
 			expect( player.isWaitingForRematch ).to.false;
 			expect( player.isInGame ).to.true;
+		} );
+	} );
+
+	describe( 'quit()', () => {
+		it( 'should reset player to default values but and quit from the game', () => {
+			player.isReady = true;
+			player.isWaitingForRematch = true;
+			player.isInGame = true;
+			player.id = 'some-id';
+
+			player.quit();
+
+			expect( player.isReady ).to.false;
+			expect( player.isWaitingForRematch ).to.false;
+			expect( player.isInGame ).to.false;
+			expect( player.id ).to.null;
+		} );
+	} );
+
+	describe( 'destroy()', () => {
+		it( 'should destroy battlefield', () => {
+			const spy = sinon.spy( battlefield, 'destroy' );
+
+			player.destroy();
+
+			sinon.assert.calledOnce( spy );
 		} );
 	} );
 } );

@@ -209,6 +209,8 @@ export default class Game {
 	 */
 	destroy() {
 		this.stopListening();
+		this.player.destroy();
+		this.opponent.destroy();
 		this[ _connection ].destroy();
 	}
 

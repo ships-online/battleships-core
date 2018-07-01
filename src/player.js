@@ -76,6 +76,14 @@ export default class Player {
 		this.id = null;
 		this.isInGame = false;
 	}
+
+	/**
+	 * Destroys the player.
+	 */
+	destroy() {
+		this.stopListening();
+		this.battlefield.destroy();
+	}
 }
 
 mix( Player, ObservableMixin );
