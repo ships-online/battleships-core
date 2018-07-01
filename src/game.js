@@ -114,6 +114,8 @@ export default class Game {
 		this[ _connection ].request( 'join', this.gameId, { ai: true } )
 			.then( gameData => {
 				this.opponent.id = gameData.opponentId;
+				this.opponent.isInGame = true;
+				this.status = 'full';
 			} )
 			.catch( error => this._handleServerError( error ) );
 	}

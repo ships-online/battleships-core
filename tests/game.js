@@ -433,6 +433,61 @@ describe( 'Game', () => {
 		} );
 	} );
 
+	describe( 'addAiOpponent()', () => {
+		let game;
+
+		beforeEach( done => {
+			Game.join( 'url', 'gameId' ).then( instance => {
+				game = instance;
+				done();
+			} );
+
+			socketMock.emit( 'response-join', {
+				response: {
+					settings: {}
+				}
+			} );
+		} );
+
+		it( 'should throw an error when game status is not available', () => {
+			game.status = 'full';
+
+			expect( () => {
+				game.addAiOpponent();
+			} ).to.throw( Error, 'Not available.' );
+		} );
+
+		it( 'should set opponent in the game and change status to `full`', done => {
+			game.status = 'available';
+
+			game.addAiOpponent();
+
+			socketMock.emit( 'response-join', { response: {
+				opponentId: 'some-id'
+			} } );
+
+			setTimeout( () => {
+				expect( game.opponent.id ).to.equal( 'some-id' );
+				expect( game.opponent.isInGame ).to.true;
+				expect( game.status ).to.equal( 'full' );
+				done();
+			}, 0 );
+		} );
+
+		it( 'should over the game when socketGateway response with error', done => {
+			game.on( 'error', ( evt, error ) => {
+				expect( error ).to.equal( 'foo-bar' );
+				done();
+			} );
+
+			game.addAiOpponent();
+
+			socketMock.emit( 'response-join', {
+				error: 'foo-bar'
+			} );
+		} );
+	} );
+
 	describe( 'accept()', () => {
 		let game;
 
