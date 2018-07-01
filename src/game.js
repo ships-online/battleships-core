@@ -104,6 +104,21 @@ export default class Game {
 	}
 
 	/**
+	 * Adds AI player as the opponent.
+	 */
+	addAiOpponent() {
+		if ( this.status != 'available' ) {
+			throw new Error( 'Not available.' );
+		}
+
+		this[ _connection ].request( 'join', this.gameId, { ai: true } )
+			.then( gameData => {
+				this.opponent.id = gameData.opponentId;
+			} )
+			.catch( error => this._handleServerError( error ) );
+	}
+
+	/**
 	 * Joins the battle.
 	 */
 	accept() {
