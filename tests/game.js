@@ -351,7 +351,7 @@ describe( 'Game', () => {
 				expect( game.winnerId ).to.equal( 'someId' );
 			} );
 
-			it( 'should display not sunken ships marked as collision in opponent battlefield when player has lost', () => {
+			it( 'should display not sunk ships marked as collision in opponent battlefield when player has lost', () => {
 				game.opponent.id = 'someId';
 
 				game.opponent.battlefield.shipsCollection.add( new Ship( {
