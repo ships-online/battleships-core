@@ -273,12 +273,12 @@ export default class Game {
 			this.status = 'full';
 			this.winnerId = null;
 
+			this.player.reset();
 			this.player.battlefield.reset();
 			this.player.battlefield.random();
-			this.player.reset();
 
-			this.opponent.battlefield.clear();
 			this.opponent.reset();
+			this.opponent.battlefield.clear();
 		} );
 
 		// Game is over.
